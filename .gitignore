@@ -1,5 +1,8 @@
-# IntelliJ project files
+# 文件夹
 .idea/
+model_ckpt/
+
+# 文件
 *.iml
 *.DS_Store
 *.pyc
