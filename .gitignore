@@ -7,7 +7,7 @@
 *.pyc
 
 # 指定文件
-git_push.sh
-git_pull.sh
+# git_push.sh
+# git_pull.sh
 
 # 排除文件
