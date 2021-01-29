@@ -5,6 +5,7 @@
 *.iml
 *.DS_Store
 *.pyc
+-*
 
 # 指定文件
 # git_push.sh
