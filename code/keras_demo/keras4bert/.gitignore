@@ -1,6 +1,6 @@
 # 文件夹
 .idea/
-model_ckpt/*
+model_ckpt/chinese_L-12_H-768_A-12/*
 
 # 文件
 *.iml
@@ -8,4 +8,4 @@ model_ckpt/*
 *.pyc
 
 # 排除文件
-!model_ckpt/placeholder
+!model_ckpt/chinese_L-12_H-768_A-12/placeholder
