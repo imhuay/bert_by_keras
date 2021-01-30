@@ -42,7 +42,7 @@ def build_bret_from_config(config_path=None,
     """"""
 
     def _arg_replace(arg_name, arg_name_new):
-        if arg_name in config:
+        if arg_name in config and arg_name != arg_name_new:
             config[arg_name_new] = config[arg_name]
             config.pop(arg_name)
 
@@ -59,16 +59,25 @@ def build_bret_from_config(config_path=None,
     config = {}
     if config_path is not None:
         config.update(json.load(open(config_path)))
-
+    
+    # 这几个 remove 的参数还没深入研究是怎么用的
     _remove_arg('directionality')
+    _remove_arg('pooler_fc_size')
+    _remove_arg('pooler_num_attention_heads')
+    _remove_arg('pooler_num_fc_layers')
+    _remove_arg('pooler_size_per_head')
+    _remove_arg('pooler_type')
+    _arg_replace('attention_probs_dropout_prob', 'attention_dropout_rate')
+    _arg_replace('hidden_act', 'hidden_activation')
     _arg_replace('hidden_dropout_prob', 'dropout_rate')
-    _arg_replace('type_vocab_size', 'segment_vocab_size')
+    _arg_replace('hidden_size', 'n_hidden_unit')
+    _arg_replace('initializer_range', 'initializer_range')
+    _arg_replace('intermediate_size', 'n_intermediate_unit')
+    _arg_replace('max_position_embeddings', 'max_position_len')
     _arg_replace('num_attention_heads', 'n_attention_head')
     _arg_replace('num_hidden_layers', 'n_transformer_block')
-    _arg_replace('intermediate_size', 'n_intermediate_unit')
-    _arg_replace('hidden_size', 'n_hidden_unit')
-    _arg_replace('attention_probs_dropout_prob', 'attention_dropout_rate')
-    _arg_replace('max_position_embeddings', 'max_position_len')
+    _arg_replace('type_vocab_size', 'segment_vocab_size')
+    _arg_replace('vocab_size', 'vocab_size')
     config.update(kwargs)
 
     model = build_bert(**config)
@@ -103,14 +112,13 @@ def build_bert(n_hidden_unit=768,
                segment_vocab_size=2,
                max_position_len=512,
                sequence_len=None,
-               hidden_act=gelu,
+               hidden_activation=gelu,
                n_unit_each_head=None,
                embedding_size=None,
                dropout_rate=0.0,
                attention_dropout_rate=0.0,
                initializer_range=0.02,
-               initializer=None,
-               **kwargs):
+               initializer=None):
     """"""
     # args assert
     embedding_size = embedding_size or n_hidden_unit
@@ -140,13 +148,13 @@ def build_bert(n_hidden_unit=768,
                                     n_hidden_unit,
                                     attention_dropout_rate,
                                     n_intermediate_unit,
-                                    hidden_act,
+                                    hidden_activation,
                                     initializer)
 
     outputs = apply_output_layer(x,
                                  embed_weights,
                                  n_hidden_unit,
-                                 hidden_act,
+                                 hidden_activation,
                                  initializer)
 
     # outputs = [sequence_embedding, cls_embedding, mlm_probability, nsp_probability]
@@ -232,7 +240,7 @@ def apply_transformer_block(inputs,
 def apply_output_layer(inputs,
                        embed_weights,
                        n_hidden_unit,
-                       hidden_act,
+                       hidden_activation,
                        initializer):
     """"""
     # 可能包含多个输出
@@ -250,7 +258,7 @@ def apply_output_layer(inputs,
 
     # Task1: Masked Language
     x = outputs[0]  # sentence embedding
-    x = keras.layers.Dense(units=n_hidden_unit, activation=hidden_act, name='MLM-Dense')(x)
+    x = keras.layers.Dense(units=n_hidden_unit, activation=hidden_activation, name='MLM-Dense')(x)
     x = LayerNormalization(name='MLM-Norm')(x)
     x = EmbeddingSimilarity(name='MLM-Sim')([x, embed_weights])
     outputs.append(x)  # mlm softmax
