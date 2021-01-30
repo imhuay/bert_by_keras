@@ -8,7 +8,10 @@ Author:
     huayang
     
 Subject:
-    
+    extract_features
+
+References:
+    https://github.com/bojone/bert4keras/blob/master/examples/basic_extract_features.py
 """
 try:
     import tensorflow.keras as keras
@@ -17,7 +20,6 @@ except:
     import keras
     import keras.backend as K
 
-# from bert4keras.tokenizers import Tokenizer
 from bert_keras.model import build_bret_from_config
 from bert_keras.tokenizer import Tokenizer
 from bert_keras.utils import to_array
@@ -26,50 +28,63 @@ config_path = '../model_ckpt/chinese_L-12_H-768_A-12/bert_config.json'
 checkpoint_path = '../model_ckpt/chinese_L-12_H-768_A-12/bert_model.ckpt'
 dict_path = '../model_ckpt/chinese_L-12_H-768_A-12/vocab.txt'
 
-model = build_bret_from_config(config_path, checkpoint_path)
-# model = build_bret_from_config('bert_keras/bert_config.json', checkpoint_path)
+sequence_len = 10
+assert sequence_len <= 512
+
+# 加载模型
+model = build_bret_from_config(config_path, checkpoint_path, sequence_len=sequence_len)
 model.summary(line_length=200)
 
-# tokenizer = Tokenizer(dict_path, do_lower_case=True)  # 建立分词器
+print('\n ===== Example of token_ids and segment_ids =====\n')
 tokenizer = Tokenizer(dict_path)  # 建立分词器
-token_ids, segment_ids = tokenizer.encode(u'语言模型')
-print(token_ids)
-print(segment_ids)
-# token_ids, segment_ids = tokenizer.encode(u'语言模型')
-token_ids, segment_ids = to_array([token_ids, token_ids], [segment_ids, segment_ids])
-print(K.int_shape(token_ids), K.int_shape(segment_ids))
+token_ids_1, segment_ids_1 = tokenizer.encode(u'语言模型', max_len=sequence_len)
+print('token_ids of "[CLS]语言模型[SEP]":', token_ids_1)
+print('segment_ids of "[CLS]语言模型[SEP]":', segment_ids_1)
+token_ids_2, segment_ids_2 = tokenizer.encode(u'深度学习', max_len=sequence_len)
+print('token_ids of "[CLS]深度学习[SEP]":', token_ids_2)
+print('segment_ids of "[CLS]深度学习[SEP]":', segment_ids_2)
 
-print('\n ===== predicting =====\n')
-ret = model.predict([token_ids, segment_ids])
-print(K.int_shape(ret))
+print('\n ===== Batch token_ids to input array =====\n')
+token_ids_inputs = to_array([token_ids_1, token_ids_2])
+segment_ids_inputs = to_array([segment_ids_1, segment_ids_2])
+print('token_ids_inputs shape:', K.int_shape(token_ids_inputs))
+print('segment_ids_inputs shape:', K.int_shape(segment_ids_inputs))
+inputs = [token_ids_inputs, segment_ids_inputs]
+
+print('\n ===== Predicting =====\n')
+ret = model.predict(inputs)
+print('outputs shape:', K.int_shape(ret))
 print(ret)
 """
-(2, 6, 768)
-[[[-0.63250995  0.20302348  0.07936601 ...  0.4912259  -0.20493391
-    0.25752544]
-  [-0.7588355   0.09651889  1.0718753  ... -0.61096895  0.04312206
-    0.03881405]
-  [ 0.547703   -0.7921168   0.44435176 ...  0.42449194  0.41105705
-    0.08222881]
-  [-0.29242465  0.6052718   0.4996871  ...  0.86041427 -0.65331763
-    0.5369073 ]
-  [-0.7473455   0.49431536  0.71851677 ...  0.38486052 -0.74090594
-    0.3905684 ]
-  [-0.87413853 -0.21650384  1.3388393  ...  0.5816851  -0.43732336
-    0.5618182 ]]
+outputs shape: (2, 10, 768)
+[[[-0.633944    0.20292063  0.08105    ...  0.49071276 -0.20267585
+    0.25830606]
+  [-0.75892895  0.09625201  1.0723153  ... -0.60993993  0.04389907
+    0.03884725]
+  [ 0.54979575 -0.7931236   0.4425914  ...  0.4254236   0.41041237
+    0.0818297 ]
+  ...
+  [ 0.01977009 -0.36778107 -0.37989917 ...  0.6733829  -0.07508729
+    0.06057744]
+  [ 0.01823647 -0.34611243 -0.43257663 ...  0.6537404  -0.07068244
+    0.07680589]
+  [ 0.03579323 -0.4066236  -0.3740445  ...  0.6502873  -0.10985652
+    0.04133184]]
 
- [[-0.6325102   0.20302393  0.07936587 ...  0.49122596 -0.20493367
-    0.25752553]
-  [-0.7588355   0.09651913  1.0718752  ... -0.61096907  0.04312139
-    0.03881442]
-  [ 0.54770297 -0.7921169   0.44435278 ...  0.42449135  0.41105768
-    0.08222892]
-  [-0.29242444  0.60527134  0.4996862  ...  0.8604133  -0.6533168
-    0.5369075 ]
-  [-0.7473458   0.49431637  0.7185164  ...  0.38486147 -0.7409059
-    0.3905691 ]
-  [-0.87413836 -0.21650326  1.3388393  ...  0.5816858  -0.437323
-    0.5618183 ]]]
+ [[-0.13377029  0.11254838  0.13370925 ... -0.12091276 -0.46421608
+    0.6820266 ]
+  [ 0.01463162  0.22006218  0.42436084 ... -0.5977771  -0.74847466
+    0.31168094]
+  [ 0.72745985  0.02070418 -0.43255618 ... -0.12479839 -0.55839443
+   -0.02365744]
+  ...
+  [ 0.01977    -0.36778125 -0.37989917 ...  0.6733826  -0.07508754
+    0.06057742]
+  [ 0.01823659 -0.34611243 -0.43257678 ...  0.6537404  -0.07068231
+    0.07680591]
+  [ 0.03579339 -0.40662354 -0.37404472 ...  0.6502874  -0.10985664
+    0.04133194]]]
+
 """
 
 # 测试中间层输出
