@@ -29,8 +29,8 @@ from .utils import gelu
 class ReturnType:
     SENTENCE_EMBEDDING = 'sentence_embedding'
     CLS_EMBEDDING = 'cls_embedding'
-    NSP_PROBABILITY = 'nsp_probability'
     MLM_PROBABILITY = 'mlm_probability'
+    NSP_PROBABILITY = 'nsp_probability'
 
 
 def build_bret_from_config(config_path=None,
@@ -38,7 +38,6 @@ def build_bret_from_config(config_path=None,
                            return_type='sentence_embedding',
                            training=False,
                            return_full_model=False,
-                           model_summary=False,
                            **kwargs):
     """"""
 
@@ -75,7 +74,7 @@ def build_bret_from_config(config_path=None,
     model = build_bert(**config)
     load_model_weights_from_checkpoint(model, config, ckpt_path)
 
-    # outputs = [sequecen embedding, cls embedding, mlm softmax, nsp softmax]
+    # outputs = [sequence_embedding, cls_embedding, mlm_probability, nsp_probability]
     outputs = model.outputs
     if return_type == ReturnType.SENTENCE_EMBEDDING:
         outputs = outputs[0]
@@ -85,11 +84,8 @@ def build_bret_from_config(config_path=None,
         outputs = outputs[2]
     elif return_type == ReturnType.NSP_PROBABILITY:
         outputs = outputs[3]
-    elif training:
+    elif training:  # 原始 bert 是一个多任务联合训练模型，包括 MLM 和 NSP，因此有两个输出
         outputs = [outputs[2], outputs[3]]
-
-    if model_summary:
-        model.summary(line_length=200)
 
     model_fix = keras.Model(model.inputs, outputs=outputs, name='Bert_fix')
     
@@ -129,31 +125,31 @@ def build_bert(n_hidden_unit=768,
     inputs = get_inputs(sequence_len)
 
     # flow
-    x, embed_weights = apply_embeddings(inputs,
-                                        vocab_size,
-                                        segment_vocab_size,
-                                        max_position_len,
-                                        embedding_size,
-                                        dropout_rate)
+    x, embed_weights = apply_embedding_layer(inputs,
+                                             vocab_size,
+                                             segment_vocab_size,
+                                             max_position_len,
+                                             embedding_size,
+                                             dropout_rate)
 
-    for layer_index in range(n_transformer_block):
-        x = apply_main_layers(x,
-                              layer_index,
-                              n_attention_head,
-                              n_unit_each_head,
-                              n_hidden_unit,
-                              attention_dropout_rate,
-                              n_intermediate_unit,
-                              hidden_act,
-                              initializer)
+    for block_index in range(n_transformer_block):
+        x = apply_transformer_block(x,
+                                    block_index,
+                                    n_attention_head,
+                                    n_unit_each_head,
+                                    n_hidden_unit,
+                                    attention_dropout_rate,
+                                    n_intermediate_unit,
+                                    hidden_act,
+                                    initializer)
 
-    outputs = apply_final_layers(x,
+    outputs = apply_output_layer(x,
                                  embed_weights,
                                  n_hidden_unit,
                                  hidden_act,
                                  initializer)
 
-    # outputs = [sequecen embedding, cls embedding, mlm softmax, nsp softmax]
+    # outputs = [sequence_embedding, cls_embedding, mlm_probability, nsp_probability]
     # if return_type == ReturnType.SENTENCE_EMBEDDING:
     #     outputs = outputs[0]
     # elif return_type == ReturnType.CLS_EMBEDDING:
@@ -178,7 +174,7 @@ def get_inputs(sequence_len):
     return inputs
 
 
-def apply_embeddings(inputs, vocab_size, segment_vocab_size, max_sequence_len, embedding_size, dropout_rate):
+def apply_embedding_layer(inputs, vocab_size, segment_vocab_size, max_sequence_len, embedding_size, dropout_rate):
     """"""
     inputs = inputs[:]
     x, s = inputs
@@ -198,18 +194,18 @@ def apply_embeddings(inputs, vocab_size, segment_vocab_size, max_sequence_len, e
     return x, embed_weights
 
 
-def apply_main_layers(inputs,
-                      layer_index,
-                      n_attention_head,
-                      n_unit_each_head,
-                      n_hidden_unit,
-                      dropout_rate,
-                      n_intermediate_unit,
-                      hidden_act,
-                      initializer):
+def apply_transformer_block(inputs,
+                            block_index,
+                            n_attention_head,
+                            n_unit_each_head,
+                            n_hidden_unit,
+                            dropout_rate,
+                            n_intermediate_unit,
+                            hidden_act,
+                            initializer):
     """Att --> Add --> LN --> FFN --> Add --> LN"""
-    attention_name = 'Transformer-%d-MultiHeadSelfAttention' % layer_index
-    feed_forward_name = 'Transformer-%d-FeedForward' % layer_index
+    attention_name = 'Transformer-%d-MultiHeadSelfAttention' % block_index
+    feed_forward_name = 'Transformer-%d-FeedForward' % block_index
 
     x = inputs
     xi = x
@@ -233,13 +229,13 @@ def apply_main_layers(inputs,
     return x
 
 
-def apply_final_layers(inputs,
+def apply_output_layer(inputs,
                        embed_weights,
                        n_hidden_unit,
                        hidden_act,
                        initializer):
     """"""
-    # 输出可能包含多个部分
+    # 可能包含多个输出
     outputs = []
 
     x = inputs
