@@ -39,7 +39,7 @@ model_fix, model = build_bret_from_config(config_path, checkpoint_path,
                                           return_full_model=True)
 model.summary(line_length=200)
 
-print('\n ===== Example of 获取 sentence embedding =====\n')
+print('\n===== 1. Example of 获取 sentence embedding =====')
 tokenizer = Tokenizer(dict_path)  # 建立分词器
 token_ids_1, segment_ids_1 = tokenizer.encode(u'语言模型', max_len=sequence_len)
 print('token_ids of "[CLS]语言模型[SEP]":', token_ids_1)
@@ -55,7 +55,7 @@ print('token_ids_inputs shape:', K.int_shape(token_ids_inputs))
 print('segment_ids_inputs shape:', K.int_shape(segment_ids_inputs))
 inputs = [token_ids_inputs, segment_ids_inputs]
 
-print('\n ----- Predicting -----\n')
+print('\n--- Predicting ---')
 ret = model_fix.predict(inputs)
 print('outputs shape:', K.int_shape(ret))
 print(ret)
@@ -95,7 +95,7 @@ outputs shape: (2, 10, 768)
 # vector_funcrion = K.function([model.layers[0].input, model.layers[1].input], [model.get_layer('Transformer-0-MultiHeadSelfAttention').output])
 # print(vector_funcrion([token_ids, segment_ids]))
 
-print('\n ===== Example of 预测 Mask 单词 =====\n')
+print('\n===== 2. Example of 预测 Mask 单词 =====')
 # 重构 model 的输出，相当于 return_type='mlm_probability'
 model_fix = keras.Model(model.inputs, [model.outputs[2]], name='Bert-mlm')
 
@@ -110,7 +110,7 @@ print('Mask 后的 segment_ids:', segment_ids)
 token_ids_inputs, segment_ids_inputs = to_array([token_ids], [segment_ids])
 inputs = [token_ids_inputs, segment_ids_inputs]
 
-print('\n ----- Predicting -----\n')
+print('\n--- Predicting ---')
 pred = model_fix.predict(inputs)
 print(K.int_shape(pred))
 pred_ids = pred[0][1:3].argmax(axis=1).tolist()
@@ -120,7 +120,7 @@ print('预测到的 token ids 及对应的字:', [(id_, tokenizer.inv_vocab[id_]
 预测到的 token ids 及对应的字: [(3144, '数'), (2110, '学')]
 """
 
-print('\n ===== Example of 预测是否是下一个句子 =====\n')
+print('\n===== 3. Example of 预测是否是下一个句子 =====')
 # 重构 model 的输出，相当于 return_type='nsp_probability'
 model_fix = keras.Model(model.inputs, [model.outputs[3]], name='Bert-nsp')
 
@@ -143,7 +143,7 @@ token_ids_inputs = to_array([token_ids_1, token_ids_2])
 segment_ids_inputs = to_array([segment_ids_1, segment_ids_2])
 inputs = [token_ids_inputs, segment_ids_inputs]
 
-print('\n ----- Predicting -----\n')
+print('\n--- Predicting ---')
 pred = model_fix.predict(inputs)
 for i, it in enumerate(pred):
     print('第%s组是下一句的概率为：%.5f' % (i+1, it[0]))
