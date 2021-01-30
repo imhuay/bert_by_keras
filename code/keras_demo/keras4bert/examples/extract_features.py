@@ -32,7 +32,9 @@ sequence_len = 10
 assert sequence_len <= 512
 
 # 加载模型
-model = build_bret_from_config(config_path, checkpoint_path, sequence_len=sequence_len)
+model = build_bret_from_config(config_path, checkpoint_path,
+                               sequence_len=sequence_len,
+                               return_type='sentence_embedding')
 model.summary(line_length=200)
 
 print('\n ===== Example of token_ids and segment_ids =====\n')

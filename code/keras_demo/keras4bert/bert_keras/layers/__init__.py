@@ -14,7 +14,7 @@ Subject:
 from .layer_normalization import LayerNormalization
 from .position_embedding import PositionEmbedding
 from .task_embedding import TaskEmbedding
-from .token_embedding import TokenEmbedding
 from .multi_head_attention import MultiHeadAttention
 from .feed_forward import FeedForward
-from .segment_embedding import SegmentEmbedding
+from .embedding_similarity import EmbeddingSimilarity
+from .custom_embedding import CustomEmbedding
