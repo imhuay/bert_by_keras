@@ -34,22 +34,23 @@ def build_bret_from_config(config_path=None, ckpt_path=None, **kwargs):
             config[arg_name_new] = config[arg_name]
             config.pop(arg_name)
 
+    def remove_arg(arg_name):
+        config.pop(arg_name)
+
     config = {}
     if config_path is not None:
         config.update(json.load(open(config_path)))
-    if 'max_position' not in config:
-        config['max_position'] = config.get('max_position_embeddings', 512)
-    if 'dropout_rate' not in config:
-        config['dropout_rate'] = config.get('hidden_dropout_prob', 0.1)
-    if 'segment_vocab_size' not in config:
-        config['segment_vocab_size'] = config.get('type_vocab_size', 2)
 
+    remove_arg('directionality')
+    remove_arg('initializer_range')
+    arg_replace('hidden_dropout_prob', 'dropout_rate')
+    arg_replace('type_vocab_size', 'segment_vocab_size')
     arg_replace('num_attention_heads', 'n_attention_head')
     arg_replace('num_hidden_layers', 'n_transformer_block')
     arg_replace('intermediate_size', 'n_intermediate_unit')
     arg_replace('hidden_size', 'n_hidden_unit')
     arg_replace('attention_probs_dropout_prob', 'attention_dropout_rate')
-    arg_replace('max_position', 'max_position_len')
+    arg_replace('max_position_embeddings', 'max_position_len')
     config.update(kwargs)
 
     model = build_bert(**config)
@@ -62,6 +63,7 @@ def build_bert(n_hidden_unit=768,
                n_attention_head=12,
                n_intermediate_unit=3072,
                vocab_size=21128,
+               segment_vocab_size=2,
                max_position_len=512,
                sequence_len=None,
                hidden_act=gelu,
@@ -69,7 +71,8 @@ def build_bert(n_hidden_unit=768,
                embedding_size=None,
                dropout_rate=0.0,
                attention_dropout_rate=0.0,
-               initializer=keras.initializers.TruncatedNormal(stddev=0.02), **kwargs):
+               initializer=keras.initializers.TruncatedNormal(stddev=0.02), 
+               **kwargs):
     """"""
     # args assert
     embedding_size = embedding_size or n_hidden_unit
@@ -79,7 +82,7 @@ def build_bert(n_hidden_unit=768,
     inputs = get_inputs(sequence_len)
 
     # flow
-    x = apply_embeddings(inputs, vocab_size, max_position_len, embedding_size, dropout_rate)
+    x = apply_embeddings(inputs, vocab_size, segment_vocab_size, max_position_len, embedding_size, dropout_rate)
 
     for i in range(n_transformer_block):
         x = apply_main_layers(x, i,
@@ -106,14 +109,14 @@ def get_inputs(sequence_len):
     return inputs
 
 
-def apply_embeddings(inputs, vocab_size, max_sequence_len, embedding_size, dropout_rate):
+def apply_embeddings(inputs, vocab_size, segment_vocab_size, max_sequence_len, embedding_size, dropout_rate):
     """"""
     inputs = inputs[:]
     x, s = inputs
 
     x = keras.layers.Embedding(input_dim=vocab_size, output_dim=embedding_size, mask_zero=True,
                                name='Embedding-Token')(x)
-    s = keras.layers.Embedding(input_dim=2, output_dim=embedding_size, name='Embedding-Segment')(s)
+    s = keras.layers.Embedding(input_dim=segment_vocab_size, output_dim=embedding_size, name='Embedding-Segment')(s)
 
     x = keras.layers.Add(name='Embedding-Token-Segment')([x, s])
     x = PositionEmbedding(input_dim=max_sequence_len, output_dim=embedding_size, name='Embedding-Position')(x)
@@ -194,7 +197,7 @@ def load_model_weights_from_checkpoint(model,
         loader('bert/embeddings/token_type_embeddings'),
     ])
     model.get_layer(name='Embedding-Position').set_weights([
-        loader('bert/embeddings/position_embeddings')[:config['max_position_embeddings'], :],
+        loader('bert/embeddings/position_embeddings')[:config['max_position_len'], :],
     ])
     model.get_layer(name='Embedding-Norm').set_weights([
         loader('bert/embeddings/LayerNorm/gamma'),
