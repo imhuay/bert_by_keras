@@ -97,7 +97,7 @@ outputs shape: (2, 10, 768)
 
 print('\n===== 2. Example of 预测 Mask 单词 =====')
 # 重构 model 的输出，相当于 return_type='mlm_probability'
-model_fix = keras.Model(model.inputs, [model.outputs[2]], name='Bert-mlm')
+model_fix = keras.Model(model.inputs, model.outputs[2], name='Bert-mlm')
 
 text = u'数学是利用符号语言研究数量、结构、变化以及空间等概念的一门学科。'
 print('待预测文本：', text)
@@ -122,7 +122,7 @@ print('预测到的 token ids 及对应的字:', [(id_, tokenizer.inv_vocab[id_]
 
 print('\n===== 3. Example of 预测是否是下一个句子 =====')
 # 重构 model 的输出，相当于 return_type='nsp_probability'
-model_fix = keras.Model(model.inputs, [model.outputs[3]], name='Bert-nsp')
+model_fix = keras.Model(model.inputs, model.outputs[3], name='Bert-nsp')
 
 sentence = '数学是利用符号语言研究数量、结构、变化以及空间等概念的一门学科。'
 print('上一句：%s' % sentence)
