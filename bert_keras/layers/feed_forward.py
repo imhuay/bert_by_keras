@@ -60,6 +60,19 @@ class FeedForward(keras.layers.Layer):
             setattr(self, 'i%s_dense' % i, i_dense)
         # weights
         self.o_dense = None
+        
+    def get_config(self):
+        config = super(FeedForward, self).get_config()
+        config.update({
+            'units': self.units,
+            'activation': [
+                keras.activations.serialize(act) for act in self.activation
+            ],
+            'use_bias': self.use_bias,
+            'kernel_initializer':
+                keras.initializers.serialize(self.kernel_initializer),
+        })
+        return config
 
     def build(self, input_shape):
         super(FeedForward, self).build(input_shape)
@@ -77,16 +90,3 @@ class FeedForward(keras.layers.Layer):
             x = x * getattr(self, 'i%s_dense' % i)(inputs)
         x = self.o_dense(x)
         return x
-
-    def get_config(self):
-        config = {
-            'units': self.units,
-            'activation': [
-                keras.activations.serialize(act) for act in self.activation
-            ],
-            'use_bias': self.use_bias,
-            'kernel_initializer':
-                keras.initializers.serialize(self.kernel_initializer),
-        }
-        base_config = super(FeedForward, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))

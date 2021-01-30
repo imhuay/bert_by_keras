@@ -22,8 +22,7 @@ except:
     import keras
     import keras.backend as K
 
-from .layers import PositionEmbedding, LayerNormalization, MultiHeadAttention, FeedForward, EmbeddingSimilarity, \
-    CustomEmbedding
+from .layers import *
 from .utils import gelu
 
 
@@ -109,7 +108,7 @@ def build_bert(n_hidden_unit=768,
                max_position_len=512,
                sequence_len=None,
                hidden_act=gelu,
-               n_each_head_unit=None,
+               n_unit_each_head=None,
                embedding_size=None,
                dropout_rate=0.0,
                attention_dropout_rate=0.0,
@@ -119,7 +118,6 @@ def build_bert(n_hidden_unit=768,
     """"""
     # args assert
     embedding_size = embedding_size or n_hidden_unit
-    n_each_head_unit = n_each_head_unit or n_hidden_unit // n_attention_head
     initializer = initializer or keras.initializers.TruncatedNormal(stddev=initializer_range)
 
     def _check_args():
@@ -142,7 +140,7 @@ def build_bert(n_hidden_unit=768,
         x = apply_main_layers(x,
                               layer_index,
                               n_attention_head,
-                              n_each_head_unit,
+                              n_unit_each_head,
                               n_hidden_unit,
                               attention_dropout_rate,
                               n_intermediate_unit,
@@ -186,12 +184,12 @@ def apply_embeddings(inputs, vocab_size, segment_vocab_size, max_sequence_len, e
     x, s = inputs
     # embed_layer = keras.layers.Embedding(input_dim=vocab_size, output_dim=embedding_size, mask_zero=True,
     #                                      name='Embedding-Token')
-    # embed_weights = embed_layer.embeddings
+    # embed_weights = embed_layer.embeddings  # 不能直接获取
     x, embed_weights = CustomEmbedding(input_dim=vocab_size, output_dim=embedding_size, mask_zero=True,
                                        name='Embedding-Token')(x)
     s = keras.layers.Embedding(input_dim=segment_vocab_size, output_dim=embedding_size, name='Embedding-Segment')(s)
 
-    x = keras.layers.Add(name='Embedding-Token-Segment')([x, s])
+    x = CustomAdd(name='Embedding-Token-Segment')([x, s])  # [x, s] 的顺序不能变
     x = PositionEmbedding(input_dim=max_sequence_len, output_dim=embedding_size, name='Embedding-Position')(x)
     # x = keras.layers.LayerNormalization(name='Embedding-Norm')(x)
     x = LayerNormalization(name='Embedding-Norm')(x)
@@ -203,7 +201,7 @@ def apply_embeddings(inputs, vocab_size, segment_vocab_size, max_sequence_len, e
 def apply_main_layers(inputs,
                       layer_index,
                       n_attention_head,
-                      n_each_head_unit,
+                      n_unit_each_head,
                       n_hidden_unit,
                       dropout_rate,
                       n_intermediate_unit,
@@ -215,9 +213,9 @@ def apply_main_layers(inputs,
 
     x = inputs
     xi = x
-    x = MultiHeadAttention(heads=n_attention_head,
-                           head_size=n_each_head_unit,
-                           out_dim=n_hidden_unit,
+    x = MultiHeadAttention(n_unit=n_hidden_unit,
+                           n_head=n_attention_head,
+                           n_unit_each_head=n_unit_each_head,
                            name=attention_name)([x, x, x])
     x = keras.layers.Dropout(dropout_rate, name='%s-Dropout' % attention_name)(x)
     x = keras.layers.Add(name='%s-Add' % attention_name)([xi, x])
