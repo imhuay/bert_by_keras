@@ -2,13 +2,13 @@
 # -*- coding:utf-8 -*-
 """
 Time:
-    2021-01-23 20:25
+    2021-01-30 19:52
     
 Author:
     huayang
     
 Subject:
-    
+    自定义 Embedding，同时返回 embedding weights
 """
 try:
     import tensorflow.keras as keras
@@ -18,11 +18,8 @@ except:
     import keras.backend as K
 
 
-class TokenEmbedding(keras.layers.Embedding):
+class CustomEmbedding(keras.layers.Embedding):
     """Embedding layer with weights returned."""
 
-    def compute_mask(self, inputs, mask=None):
-        return [super(TokenEmbedding, self).compute_mask(inputs, mask), None]
-
     def call(self, inputs):
-        return [super(TokenEmbedding, self).call(inputs), self.embeddings + 0]
+        return super(CustomEmbedding, self).call(inputs), self.embeddings
