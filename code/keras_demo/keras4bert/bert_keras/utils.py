@@ -38,3 +38,36 @@ def to_array(*args):
         return results[0]
     else:
         return results
+
+
+def sequence_masking(x, mask, mode='add', axis=-1):
+    """序列 mask
+
+    Args:
+        x: 2D 或 2D 以上张量，如 [batch_size, seq_len, input_size]
+        mask: 形如  (batch_size, seq_len) 的 0/1矩阵
+        mode: 有 'mul' 和 'add' 两种：
+            mul 会将 pad 部分置零，一般用于全连接层之前；
+            add 会把 pad 部分减去一个大的常数，一般用于 softmax 之前。
+        axis: 需要 mask 的序列所在轴
+
+    Returns:
+        tensor with shape same as x
+    """
+    if mask is None:
+        return x
+
+    assert mode in ['add', 'mul'], mode
+
+    if axis < 0:
+        axis = K.ndim(x) + axis
+
+    for _ in range(axis - 1):
+        mask = K.expand_dims(mask, axis=1)
+
+    for _ in range(K.ndim(x) - axis - 1):
+        mask = K.expand_dims(mask, axis=-1)
+
+    if mode == 'mul':
+        return x * mask
+    return x - (1 - mask) * 1e12

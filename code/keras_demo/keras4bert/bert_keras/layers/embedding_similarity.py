@@ -44,13 +44,13 @@ class EmbeddingSimilarity(keras.layers.Layer):
         self.bias = None
 
     def get_config(self):
-        config = {
+        config = super(EmbeddingSimilarity, self).get_config()
+        config.update({
             'initializer': keras.initializers.serialize(self.initializer),
             'regularizer': keras.regularizers.serialize(self.regularizer),
             'constraint': keras.constraints.serialize(self.constraint),
-        }
-        base_config = super(EmbeddingSimilarity, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
+        })
+        return config
 
     def build(self, input_shape):
         super(EmbeddingSimilarity, self).build(input_shape)

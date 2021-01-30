@@ -13,8 +13,8 @@ Subject:
 
 from .layer_normalization import LayerNormalization
 from .position_embedding import PositionEmbedding
-from .task_embedding import TaskEmbedding
 from .multi_head_attention import MultiHeadAttention
 from .feed_forward import FeedForward
 from .embedding_similarity import EmbeddingSimilarity
 from .custom_embedding import CustomEmbedding
+from .custom_add import CustomAdd

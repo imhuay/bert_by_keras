@@ -41,18 +41,18 @@ class PositionEmbedding(keras.layers.Layer):
                  input_dim,
                  output_dim,
                  mode=MODE_ADD,
-                 embeddings_initializer='uniform',
-                 embeddings_regularizer=None,
+                 embedding_initializer='uniform',
+                 embedding_regularizer=None,
+                 embedding_constraint=None,
                  activity_regularizer=None,
-                 embeddings_constraint=None,
                  **kwargs):
         """
         :param input_dim: The maximum absolute value of positions.
         :param output_dim: The embedding dimension.
-        :param embeddings_initializer:
-        :param embeddings_regularizer:
+        :param embedding_initializer:
+        :param embedding_regularizer:
         :param activity_regularizer:
-        :param embeddings_constraint:
+        :param embedding_constraint:
         :param kwargs:
         """
         super(PositionEmbedding, self).__init__(**kwargs)
@@ -60,32 +60,33 @@ class PositionEmbedding(keras.layers.Layer):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.mode = mode
-        self.embeddings_initializer = keras.initializers.get(embeddings_initializer)
-        self.embeddings_regularizer = keras.regularizers.get(embeddings_regularizer)
+        self.embedding_initializer = keras.initializers.get(embedding_initializer)
+        self.embedding_regularizer = keras.regularizers.get(embedding_regularizer)
         self.activity_regularizer = keras.regularizers.get(activity_regularizer)
-        self.embeddings_constraint = keras.constraints.get(embeddings_constraint)
+        self.embedding_constraint = keras.constraints.get(embedding_constraint)
         # weight
         self.embeddings = None
 
     def get_config(self):
-        config = {'input_dim': self.input_dim,
-                  'output_dim': self.output_dim,
-                  'mode': self.mode,
-                  'embeddings_initializer': keras.initializers.serialize(self.embeddings_initializer),
-                  'embeddings_regularizer': keras.regularizers.serialize(self.embeddings_regularizer),
-                  'activity_regularizer': keras.regularizers.serialize(self.activity_regularizer),
-                  'embeddings_constraint': keras.constraints.serialize(self.embeddings_constraint),
-                  }
-        base_config = super(PositionEmbedding, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
+        config = super(PositionEmbedding, self).get_config()
+        config.update({
+            'input_dim': self.input_dim,
+            'output_dim': self.output_dim,
+            'mode': self.mode,
+            'embedding_initializer': keras.initializers.serialize(self.embedding_initializer),
+            'embedding_regularizer': keras.regularizers.serialize(self.embedding_regularizer),
+            'embedding_constraint': keras.constraints.serialize(self.embedding_constraint),
+            'activity_regularizer': keras.regularizers.serialize(self.activity_regularizer),
+        })
+        return config
 
     def build(self, input_shape):
         self.embeddings = self.add_weight(
             shape=(self.input_dim, self.output_dim),
-            initializer=self.embeddings_initializer,
+            initializer=self.embedding_initializer,
             name='embeddings',
-            regularizer=self.embeddings_regularizer,
-            constraint=self.embeddings_constraint,
+            regularizer=self.embedding_regularizer,
+            constraint=self.embedding_constraint,
         )
         super(PositionEmbedding, self).build(input_shape)
 

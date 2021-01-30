@@ -60,9 +60,10 @@ class LayerNormalization(keras.layers.Layer):
         self.beta_constraint = keras.constraints.get(beta_constraint)
         # weights
         self.gamma = self.beta = None
-
+        
     def get_config(self):
-        config = {
+        config = super(LayerNormalization, self).get_config()
+        config.update({
             'center': self.center,
             'scale': self.scale,
             'epsilon': self.epsilon,
@@ -72,9 +73,8 @@ class LayerNormalization(keras.layers.Layer):
             'beta_regularizer': keras.regularizers.serialize(self.beta_regularizer),
             'gamma_constraint': keras.constraints.serialize(self.gamma_constraint),
             'beta_constraint': keras.constraints.serialize(self.beta_constraint),
-        }
-        base_config = super(LayerNormalization, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
+        })
+        return config
 
     def compute_output_shape(self, input_shape):
         return input_shape
