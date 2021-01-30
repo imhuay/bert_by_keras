@@ -32,7 +32,7 @@ dict_path = '../model_ckpt/chinese_L-12_H-768_A-12/vocab.txt'
 sequence_len = 100
 assert sequence_len <= 512
 
-# 加载模型
+# 加载模型：这里 model 为完整模型，包含多个输出；model_fix 为根据 return_type 裁剪输出后的模型
 model_fix, model = build_bret_from_config(config_path, checkpoint_path,
                                           sequence_len=sequence_len,
                                           return_type='sentence_embedding', 
@@ -96,7 +96,7 @@ outputs shape: (2, 10, 768)
 # print(vector_funcrion([token_ids, segment_ids]))
 
 print('\n===== 2. Example of 预测 Mask 单词 =====')
-# 重构 model 的输出，相当于 return_type='mlm_probability'
+# 重构 model 的输出，这个例子中相当于 return_type='mlm_probability'
 model_fix = keras.Model(model.inputs, model.outputs[2], name='Bert-mlm')
 
 text = u'数学是利用符号语言研究数量、结构、变化以及空间等概念的一门学科。'
@@ -121,7 +121,7 @@ print('预测到的 token ids 及对应的字:', [(id_, tokenizer.inv_vocab[id_]
 """
 
 print('\n===== 3. Example of 预测是否是下一个句子 =====')
-# 重构 model 的输出，相当于 return_type='nsp_probability'
+# 重构 model 的输出，这个例子中相当于 return_type='nsp_probability'
 model_fix = keras.Model(model.inputs, model.outputs[3], name='Bert-nsp')
 
 sentence = '数学是利用符号语言研究数量、结构、变化以及空间等概念的一门学科。'
