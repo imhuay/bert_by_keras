@@ -12,6 +12,7 @@ Subject:
 
 References:
     https://github.com/bojone/bert4keras/blob/master/examples/basic_extract_features.py
+    https://github.com/CyberZHG/keras-bert/blob/master/demo/load_model/load_and_predict.py
 """
 try:
     import tensorflow.keras as keras
