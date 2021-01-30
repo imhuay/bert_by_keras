@@ -26,6 +26,7 @@ class Tokenizer(object):
                  token_cls='[CLS]',
                  token_sep='[SEP]',
                  token_unk='[UNK]',
+                 token_mask='[MASK]',
                  pad_index=0,
                  verbose=0):
         self.vocab = load_vocab(vocab_file)
@@ -38,6 +39,7 @@ class Tokenizer(object):
         self._token_sep = token_sep
         self._token_unk = token_unk
         self._pad_index = pad_index
+        self._token_mask = token_mask
 
     def encode(self, first, second=None, max_len=None):
         first_tokens = self.tokenize(first)
@@ -68,6 +70,10 @@ class Tokenizer(object):
 
     def _convert_ids_to_tokens(self, ids):
         return convert_by_vocab(self.inv_vocab, ids)
+    
+    @property
+    def mask_id(self):
+        return self._convert_tokens_to_ids([self._token_mask])[0]
 
     def _pack(self, first_tokens, second_tokens=None):
         first_packed_tokens = [self._token_cls] + first_tokens + [self._token_sep]

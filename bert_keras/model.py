@@ -32,12 +32,13 @@ class ReturnType:
     CLS_EMBEDDING = 'cls_embedding'
     NSP_PROBABILITY = 'nsp_probability'
     MLM_PROBABILITY = 'mlm_probability'
-    
 
-def build_bret_from_config(config_path=None, 
-                           ckpt_path=None, 
+
+def build_bret_from_config(config_path=None,
+                           ckpt_path=None,
                            return_type='sentence_embedding',
                            training=False,
+                           return_full_model=False,
                            model_summary=False,
                            **kwargs):
     """"""
@@ -49,13 +50,13 @@ def build_bret_from_config(config_path=None,
 
     def _remove_arg(arg_name):
         config.pop(arg_name)
-        
+
     def _check_args():
         assert return_type in {ReturnType.SENTENCE_EMBEDDING,
                                ReturnType.CLS_EMBEDDING,
                                ReturnType.MLM_PROBABILITY,
                                ReturnType.NSP_PROBABILITY}
-    
+
     _check_args()
     config = {}
     if config_path is not None:
@@ -74,7 +75,7 @@ def build_bret_from_config(config_path=None,
 
     model = build_bert(**config)
     load_model_weights_from_checkpoint(model, config, ckpt_path)
-    
+
     # outputs = [sequecen embedding, cls embedding, mlm softmax, nsp softmax]
     outputs = model.outputs
     if return_type == ReturnType.SENTENCE_EMBEDDING:
@@ -90,9 +91,13 @@ def build_bret_from_config(config_path=None,
 
     if model_summary:
         model.summary(line_length=200)
-        
-    model = keras.Model(model.inputs, outputs=outputs, name='Bert_fix')
-    return model
+
+    model_fix = keras.Model(model.inputs, outputs=outputs, name='Bert_fix')
+    
+    if return_full_model:
+        return model_fix, model
+    
+    return model_fix
 
 
 def build_bert(n_hidden_unit=768,
@@ -116,11 +121,11 @@ def build_bert(n_hidden_unit=768,
     embedding_size = embedding_size or n_hidden_unit
     n_each_head_unit = n_each_head_unit or n_hidden_unit // n_attention_head
     initializer = initializer or keras.initializers.TruncatedNormal(stddev=initializer_range)
-    
+
     def _check_args():
         # 目前暂不支持 embedding_size != n_hidden_unit
         assert embedding_size == n_hidden_unit
-    
+
     _check_args()
     # inputs
     inputs = get_inputs(sequence_len)
@@ -291,7 +296,7 @@ def load_model_weights_from_checkpoint(model,
         _loader('bert/embeddings/LayerNorm/gamma'),
         _loader('bert/embeddings/LayerNorm/beta'),
     ])
-    
+
     for i in range(config['n_transformer_block']):
         layer_prefix = 'Transformer-%d-' % i
         weight_prefix = 'bert/encoder/layer_%d/' % i
