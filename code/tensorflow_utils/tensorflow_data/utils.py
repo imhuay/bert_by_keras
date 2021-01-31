@@ -22,7 +22,6 @@ except:
     import keras
     import keras.backend as K
 
-
 ALLOW_FORMATS = ('.bmp', '.gif', '.jpeg', '.jpg', '.png')
 
 
@@ -46,23 +45,23 @@ def get_file_list(data_path, with_prefix=True, is_sort=True, batch_size=None, n_
         - 文件名_不含后缀
 
     Returns:
-        file_ls, file_name_ls
+        file_path_ls, file_name_ls
     """
-    file_ls = [file_name for file_name in os.listdir(data_path)
-               if file_name.lower().endswith(ALLOW_FORMATS)]
+    file_path_ls = [file_name for file_name in os.listdir(data_path)
+                    if file_name.lower().endswith(ALLOW_FORMATS)]
 
-    assert batch_size is None or batch_size <= len(file_ls), 'batch_size 要小于文件数'
+    assert batch_size is None or batch_size <= len(file_path_ls), 'batch_size 要小于文件数'
 
     if is_sort:
-        file_ls = sorted(file_ls)
+        file_path_ls = sorted(file_path_ls)
 
-    file_ls = file_ls[:n_limit]
-    file_name_ls = [os.path.splitext(file_name)[0] for file_name in file_ls]
+    file_path_ls = file_path_ls[:n_limit]
+    file_name_ls = [os.path.splitext(file_name)[0] for file_name in file_path_ls]
 
     if with_prefix:
-        file_ls = [os.path.join(data_path, file_name) for file_name in file_ls]
+        file_path_ls = [os.path.join(data_path, file_name) for file_name in file_path_ls]
 
-    return file_ls, file_name_ls
+    return file_path_ls, file_name_ls
 
 
 def ds_image_show(ds: tf.data.Dataset, file_name_ls=None, with_label=True, label_mode='int', batch_size=None, n_show=9):
@@ -97,7 +96,7 @@ def ds_image_show(ds: tf.data.Dataset, file_name_ls=None, with_label=True, label
     label_ls = label_ls[:n_show]
 
     tmp = int(n_show ** 0.5)
-    if tmp**2 == n_show:
+    if tmp ** 2 == n_show:
         n_row = n_col = tmp
     else:
         n_row = n_col = tmp + 1

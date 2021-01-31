@@ -44,10 +44,10 @@ def get_ds_predict_image(data_path,
     process_image = lambda file_path: pre_process_image(file_path, image_size, is_normalize)
 
     # 1. 获取文件名列表
-    file_ls, file_name_ls = get_file_list(data_path, is_sort=is_sort, batch_size=batch_size, n_limit=n_limit)
+    file_path_ls, file_name_ls = get_file_list(data_path, is_sort=is_sort, batch_size=batch_size, n_limit=n_limit)
 
     # 2. 构建 ds（此时的 ds 内部是字符串 file_path）
-    ds_predict = tf.data.Dataset.from_tensor_slices(file_ls)
+    ds_predict = tf.data.Dataset.from_tensor_slices(file_path_ls)
 
     # 3. 对 ds 进行 map 操作，将对应 file_path 下的图片转换为 tensor
     ds_predict = ds_predict.map(process_image)
@@ -56,4 +56,4 @@ def get_ds_predict_image(data_path,
     if batch_size:
         ds_predict = ds_predict.batch(batch_size)
 
-    return ds_predict, file_ls, file_name_ls
+    return ds_predict, file_path_ls, file_name_ls
