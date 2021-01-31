@@ -25,10 +25,10 @@ def build_model(config_path, checkpoint_path, sequence_len, n_class):
     """"""
     bert = build_bret_from_config(config_path, checkpoint_path,
                                   sequence_len=sequence_len,
-                                  return_type='cls_embedding')
-    # 拿到 [CLS] 向量
-    x = bert.outputs  # [B, H]
-    x = keras.layers.Dropout(0.1, name='Classification_Dropout')(x)
+                                  return_type='cls_embedding')  # 设置模型返回 cls_embedding
+    # 获取 [CLS] 向量
+    x = bert.output  # 这里用 output，outputs 返回的是一个列表
+    x = keras.layers.Dropout(0.1, name='Classification_Dropout')(x)  # 如果用 outputs，这里要传 x[0]
     # 增加 softmax 层
     outputs = keras.layers.Dense(n_class, name='Classification_Softmax')(x)
 
