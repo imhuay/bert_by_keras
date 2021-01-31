@@ -14,6 +14,7 @@ Index
 - [恢复已删除的文件](#恢复已删除的文件)
 - [ssh key 相关](#ssh-key-相关)
 - [`git subtree` 基本使用](#git-subtree-基本使用)
+    - [重新关联子仓库](#重新关联子仓库)
 - [修改 commit 的 author 信息](#修改-commit-的-author-信息)
 
 <!-- /TOC -->
@@ -172,7 +173,7 @@ git checkout commit_id [file]
         |
         |-- sub/
         |   |
-        |   \--libpng/
+        |   \-- libpng/
         |       |
         |       |-- libpng.c
         |       |-- libpng.h
@@ -201,6 +202,48 @@ git checkout commit_id [file]
     ```
     > git subtree push --prefix=sub/libpng libpng master
     ```
+    
+#### 重新关联子仓库
+- 比如子仓库A改名并修改了远程地址，且子仓库A还有自己的子仓库B；
+- 重新关联前，确保已经 push 最新结果；
+- 目录结构
+    ```
+    father
+        |
+        |-- A/
+        |   |
+        |   |-- README.md
+        |   \-- B/
+        |       |
+        |       \-- README.md
+        |
+        |-- main.c
+        \-- README.md
+    ```
+
+1. 重命名远程仓库，并修改地址
+
+    ```
+    > git remote rename <old_name_a> <new_name_a>
+    > git remote set-url <new_name_a> <new_url_a>
+    ```
+
+2. 删除当前子仓库A文件夹（其中包含子仓库B），并 commit
+
+3. 重新 add 子仓库A（自动 commit）
+
+    ```
+    > git subtree add --prefix=<new_prefix> <new_name_a> master --squash
+    ```
+
+4. 删除子仓库A下的子仓库B，并 commit，否则父仓库不能关联子仓库B（提示prefix已存在）
+
+5. 重新 add 子仓库B（因为前缀变了，所以 b 也要重新 add）
+    ```
+    > git subtree add --prefix=<new_prefix>/b <name_b> master --squash
+    ```
+
+6. 完成
 
 ### 修改 commit 的 author 信息
 > 如何修改git commit的author信息 - 咸咸海风 - 博客园 | https://www.cnblogs.com/651434092qq/p/11015901.html
