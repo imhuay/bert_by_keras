@@ -28,7 +28,7 @@ def get_ds_predict_image(data_path,
                          is_sort=True,
                          image_size=(224, 224),
                          is_normalize=True,
-                         batch_size=None,
+                         batch_size=32,
                          n_limit=None):
     """生成 ds_predict
 
