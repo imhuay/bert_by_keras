@@ -260,12 +260,12 @@ def apply_output_layer(inputs,
     x = outputs[0]  # sentence embedding
     x = keras.layers.Dense(units=n_hidden_unit, activation=hidden_activation, name='MLM-Dense')(x)
     x = LayerNormalization(name='MLM-Norm')(x)
-    x = EmbeddingSimilarity(name='MLM-Sim')([x, embed_weights])
+    x = EmbeddingSimilarity(name='MLM-Softmax')([x, embed_weights])
     outputs.append(x)  # mlm softmax
 
     # Task2: Next Sentence
     x = outputs[1]  # [CLS] 向量
-    x = keras.layers.Dense(units=2, activation='softmax', kernel_initializer=initializer, name='NSP-Proba')(x)
+    x = keras.layers.Dense(units=2, activation='softmax', kernel_initializer=initializer, name='NSP-Softmax')(x)
     outputs.append(x)  # nsp softmax
 
     return outputs  # [sequecen embedding, cls embedding, mlm softmax, nsp softmax]
@@ -339,10 +339,10 @@ def load_model_weights_from_checkpoint(model,
         _loader('cls/predictions/transform/LayerNorm/gamma'),
         _loader('cls/predictions/transform/LayerNorm/beta'),
     ])
-    model.get_layer(name='MLM-Sim').set_weights([
+    model.get_layer(name='MLM-Softmax').set_weights([
         _loader('cls/predictions/output_bias'),
     ])
-    model.get_layer(name='NSP-Proba').set_weights([
+    model.get_layer(name='NSP-Softmax').set_weights([
         np.transpose(_loader('cls/seq_relationship/output_weights')),
         _loader('cls/seq_relationship/output_bias'),
     ])
