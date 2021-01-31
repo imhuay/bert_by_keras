@@ -38,7 +38,7 @@ def build_bret_from_config(config_path=None,
                            return_type='cls_embedding',
                            training=False,
                            return_full_model=False,
-                           return_config=True,
+                           return_config=False,
                            **kwargs):
     """"""
 
