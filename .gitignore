@@ -1,14 +1,11 @@
 # 文件夹
 .idea/
+model_ckpt/chinese_L-12_H-768_A-12/*
 
-# 临时文件
+# 文件
 *.iml
 *.DS_Store
 *.pyc
--*
-
-# 指定文件
-# git_push.sh
-# git_pull.sh
 
 # 排除文件
+!model_ckpt/chinese_L-12_H-768_A-12/placeholder
