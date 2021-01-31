@@ -92,21 +92,22 @@ outputs shape: (2, 10, 768)
 """
 
 # 测试中间层输出
-# vector_funcrion = K.function([model.layers[0].input, model.layers[1].input], [model.get_layer('Transformer-0-MultiHeadSelfAttention').output])
-# print(vector_funcrion([token_ids, segment_ids]))
+# vector_funcrion = K.function(model.inputs, model.get_layer('Transformer-0-MultiHeadSelfAttention').output)
+# print(vector_funcrion(inputs))
 
 print('\n===== 2. Example of 预测 Mask 单词 =====')
 # 重构 model 的输出，这个例子中相当于 return_type='mlm_probability'
 model_fix = keras.Model(model.inputs, model.outputs[2], name='Bert-mlm')
 
 text = u'数学是利用符号语言研究数量、结构、变化以及空间等概念的一门学科。'
-print('待预测文本：', text)
-print('Mask 的词：', '数学')
+print('待预测文本："%s"' % text)
+print('其中被 Mask 的词："%s"' % '数学')
 token_ids, segment_ids = tokenizer.encode(text, max_len=sequence_len)
+print('把"数"和"学"的 token_id 替换成 "[MASK]" 的 token_id。')
 token_ids[1] = token_ids[2] = tokenizer.mask_id
-print('[MASK] 的 token id:', tokenizer.mask_id)
-print('Mask 后的 token_ids:', token_ids)
-print('Mask 后的 segment_ids:', segment_ids)
+print('其中 "[MASK]" 的 token_id 为:', tokenizer.mask_id)
+print('文本被 Mask 后的 token_ids:', token_ids)
+print('文本被 Mask 后的 segment_ids:', segment_ids)
 token_ids_inputs, segment_ids_inputs = to_array([token_ids], [segment_ids])
 inputs = [token_ids_inputs, segment_ids_inputs]
 
@@ -114,10 +115,10 @@ print('\n--- Predicting ---')
 pred = model_fix.predict(inputs)
 print(K.int_shape(pred))
 pred_ids = pred[0][1:3].argmax(axis=1).tolist()
-print('预测到的 token ids 及对应的字:', [(id_, tokenizer.inv_vocab[id_]) for id_ in pred_ids])  # [3144, 2110] -> ['数', '学']
+print('预测的 token_id 及对应的字:', [(id_, tokenizer.inv_vocab[id_]) for id_ in pred_ids])  # [3144, 2110] -> ['数', '学']
 """
 (1, 100, 21128)
-预测到的 token ids 及对应的字: [(3144, '数'), (2110, '学')]
+预测的 token_id 及对应的字: [(3144, '数'), (2110, '学')]
 """
 
 print('\n===== 3. Example of 预测是否是下一个句子 =====')
@@ -125,11 +126,11 @@ print('\n===== 3. Example of 预测是否是下一个句子 =====')
 model_fix = keras.Model(model.inputs, model.outputs[3], name='Bert-nsp')
 
 sentence = '数学是利用符号语言研究数量、结构、变化以及空间等概念的一门学科。'
-print('上一句：%s' % sentence)
+print('上一句："%s"' % sentence)
 sentence_1 = '从某种角度看属于形式科学的一种。'
-print('待预测的下一句1：%s' % sentence_1)
+print('待预测的下一句1："%s"' % sentence_1)
 sentence_2 = '任何一个希尔伯特空间都有一族标准正交基。'
-print('待预测的下一句2：%s' % sentence_2)
+print('待预测的下一句2："%s"' % sentence_2)
 
 token_ids_1, segment_ids_1 = tokenizer.encode(first=sentence, second=sentence_1, max_len=sequence_len)
 print('第一组生成的 token_ids:', token_ids_1)
