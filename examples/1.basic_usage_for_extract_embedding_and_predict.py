@@ -36,7 +36,8 @@ assert sequence_len <= 512
 model_fix, model = build_bret_from_config(config_path, checkpoint_path,
                                           sequence_len=sequence_len,
                                           return_type='sentence_embedding', 
-                                          return_full_model=True)
+                                          return_full_model=True,
+                                          return_config=False)
 model.summary(line_length=200)
 
 print('\n===== 1. Example of 获取 sentence embedding =====')
