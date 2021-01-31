@@ -35,9 +35,10 @@ class ReturnType:
 
 def build_bret_from_config(config_path=None,
                            ckpt_path=None,
-                           return_type='sentence_embedding',
+                           return_type='cls_embedding',
                            training=False,
                            return_full_model=False,
+                           return_config=True,
                            **kwargs):
     """"""
 
@@ -80,7 +81,7 @@ def build_bret_from_config(config_path=None,
     _arg_replace('vocab_size', 'vocab_size')
     config.update(kwargs)
 
-    model = build_bert(**config)
+    model = bert(**config)
     load_model_weights_from_checkpoint(model, config, ckpt_path)
 
     # outputs = [sequence_embedding, cls_embedding, mlm_probability, nsp_probability]
@@ -98,27 +99,31 @@ def build_bret_from_config(config_path=None,
 
     model_fix = keras.Model(model.inputs, outputs=outputs, name='Bert_fix')
     
+    ret = [model_fix]
     if return_full_model:
-        return model_fix, model
+        ret.append(model)
     
-    return model_fix
+    if return_config:
+        ret.append(config)
+    
+    return ret
 
 
-def build_bert(n_hidden_unit=768,
-               n_transformer_block=12,
-               n_attention_head=12,
-               n_intermediate_unit=3072,
-               vocab_size=21128,
-               segment_vocab_size=2,
-               max_position_len=512,
-               sequence_len=None,
-               hidden_activation=gelu,
-               n_unit_each_head=None,
-               embedding_size=None,
-               dropout_rate=0.0,
-               attention_dropout_rate=0.0,
-               initializer_range=0.02,
-               initializer=None):
+def bert(n_hidden_unit=768,
+         n_transformer_block=12,
+         n_attention_head=12,
+         n_intermediate_unit=3072,
+         vocab_size=21128,
+         segment_vocab_size=2,
+         max_position_len=512,
+         sequence_len=None,
+         hidden_activation=gelu,
+         n_unit_each_head=None,
+         embedding_size=None,
+         dropout_rate=0.0,
+         attention_dropout_rate=0.0,
+         initializer_range=0.02,
+         initializer=None):
     """"""
     # args assert
     embedding_size = embedding_size or n_hidden_unit
