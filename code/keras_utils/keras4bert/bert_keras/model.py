@@ -106,7 +106,7 @@ def build_bret_from_config(config_path=None,
     if return_config:
         ret.append(config)
     
-    return ret
+    return ret if len(ret) > 1 else ret[0]
 
 
 def bert(n_hidden_unit=768,
