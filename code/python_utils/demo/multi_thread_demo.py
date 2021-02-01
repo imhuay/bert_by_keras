@@ -21,10 +21,10 @@ import requests
 from tqdm import tqdm
 from multiprocessing.pool import ThreadPool
 
-ALLOW_FORMATS = ('.bmp', '.gif', '.jpeg', '.jpg', '.png')
+ALLOW_FORMATS = ('.jpg', '.jpeg', '.png', '.gif', '.bmp')
 
 
-def file_download(args):
+def file_download(args, timeout=3, n_retry_max=5):
     """数据下载"""
 
     def _get_ext(url: str):
@@ -35,12 +35,23 @@ def file_download(args):
         return '.jpg'
 
     url, dir_path, file_name = args
-    response = requests.get(url)
+    n_retry = 0
+    response = None
+    while n_retry < n_retry_max:
+        try:
+            response = requests.get(url=url, timeout=timeout)
+            break
+        except:
+            pass
+        finally:
+            n_retry += 1
 
     ext = _get_ext(url)
     save_path = os.path.join(dir_path, file_name + ext)
-    with open(save_path, 'wb') as fw:
-        fw.write(response.content)
+
+    if response:
+        with open(save_path, 'wb') as fw:
+            fw.write(response.content)
 
     return save_path
 
