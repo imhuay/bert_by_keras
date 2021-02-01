@@ -18,7 +18,7 @@ except:
     import keras
     import keras.backend as K
 
-from bert_keras.model import build_bret, model_fine_tune_config
+from bert_keras.model.bert import build_bret, model_fine_tune_config
 
 
 def build_model(config_path, checkpoint_path, sequence_len, n_class):

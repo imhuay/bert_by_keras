@@ -26,8 +26,8 @@ except:
     import keras
     import keras.backend as K
 
-from .layers import *
-from .utils import gelu
+from bert_keras.layers import *
+from bert_keras.utils import gelu
 
 
 class _OutputType:
@@ -44,7 +44,7 @@ class _OutputType:
 
 
 class _LayerName:
-    """各层的命名，用于加载 ckpt 时一一对应"""
+    """各层的命名，用于加载 ckpt 时一一对应，避免写两遍"""
 
     def __init__(self, n_transformer_block):
         """"""
@@ -63,16 +63,16 @@ class _LayerName:
 
         # transform_block
         for block_index in range(n_transformer_block):
-            prefix_attr = 'transformer_%s_' % block_index
-            prefix_layer = 'Transformer-%s-' % block_index
-            setattr(self, prefix_attr + 'attention', prefix_layer + 'MultiHeadSelfAttention')
-            setattr(self, prefix_attr + 'attention_dropout', prefix_layer + 'MultiHeadSelfAttention-Dropout')
-            setattr(self, prefix_attr + 'attention_add', prefix_layer + 'MultiHeadSelfAttention-Add')
-            setattr(self, prefix_attr + 'attention_norm', prefix_layer + 'MultiHeadSelfAttention-Norm')
-            setattr(self, prefix_attr + 'feed_forward', prefix_layer + 'FeedForward')
-            setattr(self, prefix_attr + 'feed_forward_dropout', prefix_layer + 'FeedForward-Dropout')
-            setattr(self, prefix_attr + 'feed_forward_add', prefix_layer + 'FeedForward-Add')
-            setattr(self, prefix_attr + 'feed_forward_norm', prefix_layer + 'FeedForward-Norm')
+            prefix_attr = 'transformer_%s' % block_index + '_%s'
+            prefix_layer = 'Transformer-%s' % block_index + '-%s'
+            setattr(self, prefix_attr % 'attention', prefix_layer % 'MultiHeadSelfAttention')
+            setattr(self, prefix_attr % 'attention_dropout', prefix_layer % 'MultiHeadSelfAttention-Dropout')
+            setattr(self, prefix_attr % 'attention_add', prefix_layer % 'MultiHeadSelfAttention-Add')
+            setattr(self, prefix_attr % 'attention_norm', prefix_layer % 'MultiHeadSelfAttention-Norm')
+            setattr(self, prefix_attr % 'feed_forward', prefix_layer % 'FeedForward')
+            setattr(self, prefix_attr % 'feed_forward_dropout', prefix_layer % 'FeedForward-Dropout')
+            setattr(self, prefix_attr % 'feed_forward_add', prefix_layer % 'FeedForward-Add')
+            setattr(self, prefix_attr % 'feed_forward_norm', prefix_layer % 'FeedForward-Norm')
 
         # output layer
         self.pooler = 'Pooler'
@@ -81,6 +81,33 @@ class _LayerName:
         self.mlm_norm = 'MLM-Norm'
         self.mlm_softmax = 'MLM-Softmax'
         self.nsp_softmax = 'NSP-Softmax'
+        
+    def _get_transformer_name(self, block_index, part):
+        return getattr(self, 'transformer_%s_%s' % (block_index, part))
+    
+    def get_transformer_attention(self, block_index):
+        return self._get_transformer_name(block_index, part='attention')
+    
+    def get_transformer_attention_dropout(self, block_index):
+        return self._get_transformer_name(block_index, part='attention_dropout')
+    
+    def get_transformer_attention_add(self, block_index):
+        return self._get_transformer_name(block_index, part='attention_add')
+    
+    def get_transformer_attention_norm(self, block_index):
+        return self._get_transformer_name(block_index, part='attention_norm')
+    
+    def get_transformer_feed_forward(self, block_index):
+        return self._get_transformer_name(block_index, part='feed_forward')
+    
+    def get_transformer_feed_forward_dropout(self, block_index):
+        return self._get_transformer_name(block_index, part='feed_forward_dropout')
+    
+    def get_transformer_feed_forward_add(self, block_index):
+        return self._get_transformer_name(block_index, part='feed_forward_add')
+    
+    def get_transformer_feed_forward_norm(self, block_index):
+        return self._get_transformer_name(block_index, part='feed_forward_norm')
 
 
 def build_bret(config_path=None,
@@ -278,21 +305,19 @@ def apply_transformer_block(inputs,
     x = MultiHeadAttention(n_unit=n_hidden_unit,
                            n_head=n_attention_head,
                            n_unit_each_head=n_unit_each_head,
-                           name=getattr(layer_name, 'transformer_%s_attention' % block_index))([x, x, x])
-    x = keras.layers.Dropout(dropout_rate,
-                             name=getattr(layer_name, 'transformer_%s_attention_dropout' % block_index))(x)
-    x = keras.layers.Add(name=getattr(layer_name, 'transformer_%s_attention_add' % block_index))([xi, x])
-    x = LayerNormalization(name=getattr(layer_name, 'transformer_%s_attention_norm' % block_index))(x)
+                           name=layer_name.get_transformer_attention(block_index))([x, x, x])
+    x = keras.layers.Dropout(dropout_rate, name=layer_name.get_transformer_attention_dropout(block_index))(x)
+    x = keras.layers.Add(name=layer_name.get_transformer_attention_add(block_index))([xi, x])
+    x = LayerNormalization(name=layer_name.get_transformer_attention_norm(block_index))(x)
 
     xi = x
     x = FeedForward(units=n_intermediate_unit,
                     activation=hidden_act,
                     kernel_initializer=initializer,
-                    name=getattr(layer_name, 'transformer_%s_feed_forward' % block_index))(x)
-    x = keras.layers.Dropout(dropout_rate,
-                             name=getattr(layer_name, 'transformer_%s_feed_forward_dropout' % block_index))(x)
-    x = keras.layers.Add(name=getattr(layer_name, 'transformer_%s_feed_forward_add' % block_index))([xi, x])
-    x = LayerNormalization(name=getattr(layer_name, 'transformer_%s_feed_forward_norm' % block_index))(x)
+                    name=layer_name.get_transformer_feed_forward(block_index))(x)
+    x = keras.layers.Dropout(dropout_rate, name=layer_name.get_transformer_feed_forward_dropout(block_index))(x)
+    x = keras.layers.Add(name=layer_name.get_transformer_feed_forward_add(block_index))([xi, x])
+    x = LayerNormalization(name=layer_name.get_transformer_feed_forward_norm(block_index))(x)
 
     return x
 
@@ -357,7 +382,7 @@ def load_model_weights_from_checkpoint(model,
 
     for block_index in range(config['n_transformer_block']):
         weight_prefix = 'bert/encoder/layer_%d/' % block_index
-        model.get_layer(name=getattr(layer_name, 'transformer_%s_attention' % block_index)).set_weights([
+        model.get_layer(name=layer_name.get_transformer_attention(block_index)).set_weights([
             _loader(weight_prefix + 'attention/self/query/kernel'),
             _loader(weight_prefix + 'attention/self/query/bias'),
             _loader(weight_prefix + 'attention/self/key/kernel'),
@@ -367,17 +392,17 @@ def load_model_weights_from_checkpoint(model,
             _loader(weight_prefix + 'attention/output/dense/kernel'),
             _loader(weight_prefix + 'attention/output/dense/bias'),
         ])
-        model.get_layer(name=getattr(layer_name, 'transformer_%s_attention_norm' % block_index)).set_weights([
+        model.get_layer(name=layer_name.get_transformer_attention_norm(block_index)).set_weights([
             _loader(weight_prefix + 'attention/output/LayerNorm/gamma'),
             _loader(weight_prefix + 'attention/output/LayerNorm/beta'),
         ])
-        model.get_layer(name=getattr(layer_name, 'transformer_%s_feed_forward' % block_index)).set_weights([
+        model.get_layer(name=layer_name.get_transformer_feed_forward(block_index)).set_weights([
             _loader(weight_prefix + 'intermediate/dense/kernel'),
             _loader(weight_prefix + 'intermediate/dense/bias'),
             _loader(weight_prefix + 'output/dense/kernel'),
             _loader(weight_prefix + 'output/dense/bias'),
         ])
-        model.get_layer(name=getattr(layer_name, 'transformer_%s_feed_forward_norm' % block_index)).set_weights([
+        model.get_layer(name=layer_name.get_transformer_feed_forward_norm(block_index)).set_weights([
             _loader(weight_prefix + 'output/LayerNorm/gamma'),
             _loader(weight_prefix + 'output/LayerNorm/beta'),
         ])
