@@ -33,13 +33,13 @@ class ReturnType:
     NSP_PROBABILITY = 'nsp_probability'
 
 
-def build_bret_from_config(config_path=None,
-                           ckpt_path=None,
-                           return_type='cls_embedding',
-                           training=False,
-                           return_full_model=False,
-                           return_config=False,
-                           **kwargs):
+def build_bret(config_path=None,
+               ckpt_path=None,
+               return_type='cls_embedding',
+               training=False,
+               return_full_model=False,
+               return_config=False,
+               **kwargs):
     """"""
 
     def _arg_replace(arg_name, arg_name_new):
