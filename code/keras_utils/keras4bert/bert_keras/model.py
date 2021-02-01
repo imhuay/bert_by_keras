@@ -245,7 +245,6 @@ def apply_embedding_layer(inputs,
                           dropout_rate,
                           layer_name):
     """"""
-    inputs = inputs[:]
     x, s = inputs
     # embed_layer = keras.layers.Embedding(input_dim=vocab_size, output_dim=embedding_size, mask_zero=True,
     #                                      name='Embedding-Token')
