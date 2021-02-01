@@ -16,6 +16,8 @@ References:
     https://github.com/bojone/bert4keras/blob/master/examples/basic_extract_features.py
     https://github.com/CyberZHG/keras-bert/blob/master/demo/load_model/load_and_predict.py
 """
+import numpy as np
+
 try:
     import tensorflow.keras as keras
     import tensorflow.keras.backend as K
@@ -61,36 +63,22 @@ inputs = [token_ids_inputs, segment_ids_inputs]
 print('\n--- Predicting ---')
 ret = model_fix.predict(inputs)
 print('outputs shape:', K.int_shape(ret))
-print(ret)
+# 截断结果
+ret_part = ret[:, :1, :5]
+# print(ret_part.tolist())
+# 期望结果（截断）
+ret_part_except = np.array(
+    [[[-0.6325101852416992, 0.20302321016788483, 0.0793653056025505, -0.032842427492141724, 0.56680828332901]],
+     [[-0.13332870602607727, 0.11290775239467621, 0.13338595628738403, 0.40458744764328003, 0.43473660945892334]]]
+)
+print('部分截断结果：')
+print(ret_part)
+assert np.allclose(ret_part, ret_part_except, atol=0.003), '实际结果与期望值不符'
 """
 outputs shape: (2, 100, 768)
-[[[-0.6325102   0.20302321  0.07936531 ...  0.49122596 -0.20493448
-    0.2575256 ]
-  [-0.7588352   0.09651878  1.0718747  ... -0.61096907  0.04312116
-    0.03881412]
-  [ 0.5477028  -0.79211754  0.4443523  ...  0.42449158  0.41105708
-    0.08222917]
-  ...
-  [-0.03277081 -0.48243824 -0.361671   ...  0.7180104  -0.12803611
-    0.03498956]
-  [-0.02219212 -0.48458925 -0.43217662 ...  0.7270943  -0.07406927
-    0.01058598]
-  [-0.06935356 -0.49976897 -0.3491079  ...  0.7284312  -0.1276668
-    0.03296683]]
+[[[-0.6325102   0.20302321  0.07936531 -0.03284243  0.5668083 ]]
 
- [[-0.1333287   0.11290775  0.13338596 ... -0.12072507 -0.46391013
-    0.682771  ]
-  [ 0.01600987  0.2203105   0.42461488 ... -0.5974555  -0.7474879
-    0.3116304 ]
-  [ 0.72724533  0.01966706 -0.4315258  ... -0.1256972  -0.5581709
-   -0.02299952]
-  ...
-  [-0.03277081 -0.48243824 -0.361671   ...  0.7180104  -0.12803611
-    0.03498956]
-  [-0.02219215 -0.48458892 -0.43217683 ...  0.7270941  -0.07406903
-    0.010586  ]
-  [-0.06935389 -0.49976864 -0.34910777 ...  0.7284312  -0.12766662
-    0.03296699]]]
+ [[-0.1333287   0.11290775  0.13338596  0.40458745  0.4347366 ]]]
 """
 
 # 测试中间层输出
@@ -116,8 +104,13 @@ inputs = [token_ids_inputs, segment_ids_inputs]
 print('\n--- Predicting ---')
 pred = model_fix.predict(inputs)
 print(K.int_shape(pred))
-pred_ids = pred[0][1:3].argmax(axis=1).tolist()
-print('预测的 token_id 及对应的字:', [(id_, tokenizer.inv_vocab[id_]) for id_ in pred_ids])  # [3144, 2110] -> ['数', '学']
+pred_ids = pred[0][1:3].argmax(axis=1).tolist()  # 提取预测结果的 token id
+# 期望结果
+ret_except = [(3144, '数'), (2110, '学')]
+# 实际结果
+ret = [(id_, tokenizer.inv_vocab[id_]) for id_ in pred_ids]
+print('预测的 token_id 及对应的字:', ret)  # [3144, 2110] -> ['数', '学']
+assert ret == ret_except, '实际结果与期望值不符'
 """
 (1, 100, 21128)
 预测的 token_id 及对应的字: [(3144, '数'), (2110, '学')]
@@ -147,9 +140,13 @@ segment_ids_inputs = to_array([segment_ids_1, segment_ids_2])
 inputs = [token_ids_inputs, segment_ids_inputs]
 
 print('\n--- Predicting ---')
-pred = model_fix.predict(inputs)
-for i, it in enumerate(pred):
-    print('第%s组是下一句的概率为：%.5f' % (i+1, it[0]))
+ret = model_fix.predict(inputs)
+# print(ret.tolist())
+# 期望结果
+ret_except = np.array([[0.9999082088470459, 9.180504275718704e-05], [0.0010862667113542557, 0.9989137649536133]])
+assert np.allclose(ret, ret_except, atol=0.001), '实际结果与期望值不符'
+for i, it in enumerate(ret):
+    print('第%s组是下一句的概率为：%.5f' % (i + 1, it[0]))
 """
 第1组是下一句的概率为：0.99991
 第2组是下一句的概率为：0.00109
