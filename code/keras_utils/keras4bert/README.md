@@ -9,5 +9,5 @@ bert_by_keras
 	- [bojone/bert4keras](https://github.com/bojone/bert4keras)
 
 ### 运行环境
+- tensorflow==2.4（推荐）
 - tensorflow==2.0 + keras==2.3.1
-- tensorflow==2.4
