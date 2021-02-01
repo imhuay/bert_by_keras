@@ -39,7 +39,8 @@ def file_download(args):
 
     ext = _get_ext(url)
     save_path = os.path.join(dir_path, file_name + ext)
-    open(save_path, 'wb').write(response.content)
+    with open(save_path, 'wb') as fw:
+        fw.write(response.content)
 
     return save_path
 
