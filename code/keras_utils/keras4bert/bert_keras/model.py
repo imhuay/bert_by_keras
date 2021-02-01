@@ -48,6 +48,8 @@ class _LayerName:
 
     def __init__(self, n_transformer_block):
         """"""
+        self.n_transformer_block = n_transformer_block
+
         # input layer
         self.input_token = 'Input-Token'
         self.input_segment = 'Input-Segment'
@@ -87,6 +89,7 @@ def build_bret(config_path=None,
                training=False,
                return_full_model=False,
                return_config=False,
+               return_layer_name=False,
                **kwargs):
     """"""
 
@@ -150,6 +153,9 @@ def build_bret(config_path=None,
 
     if return_config:
         ret.append(config)
+
+    if return_layer_name:
+        ret.append(layer_name)
 
     return model_fix if len(ret) <= 1 else ret
 
@@ -396,3 +402,51 @@ def load_model_weights_from_checkpoint(model,
         np.transpose(_loader('cls/seq_relationship/output_weights')),
         _loader('cls/seq_relationship/output_bias'),
     ])
+
+
+def model_fine_tune_config(model: keras.Model,
+                           layer_name: _LayerName,
+                           is_fine_tune=True,
+                           is_fine_tune_norm=False,
+                           is_fine_tune_embedding=False,
+                           n_fine_tune_transformer_block=None):
+    """
+    模型 fine tune 配置，如果有其他需求可以参考这个方法修改：
+        - 比如 output 部分一般都是要参与训练的，这个应该没疑问，就没写相关控制方法；
+        - 比如像控制特定哪几个 transformer 要参与训练
+        
+    Args:
+        model: 
+        layer_name: 
+        is_fine_tune: 是否微调模型，默认 True
+        is_fine_tune_norm: 是否微调 LayerNormalization 层，默认 False
+        is_fine_tune_embedding: 是否微调 Embedding，默认 False
+        n_fine_tune_transformer_block: 控制微调的 transformer_block 数量，默认全部参与微调
+            - 优先参与训练的是接近 output 的 block；
+            - block 内部的层要么全部参与微调，要么都不；
+
+    Returns:
+        None
+    """
+    model.trainable = True
+    if not is_fine_tune:
+        model.trainable = False
+        return model
+
+    if n_fine_tune_transformer_block and n_fine_tune_transformer_block <= layer_name.n_transformer_block:
+        # 相当于把剩下的 block 调整的不可训练
+        for block_index in range(layer_name.n_transformer_block - n_fine_tune_transformer_block):
+            model.get_layer(getattr(layer_name, 'transformer_%s_attention' % block_index)).trainable = False
+            model.get_layer(getattr(layer_name, 'transformer_%s_feed_forward' % block_index)).trainable = False
+
+    if not is_fine_tune_norm:
+        for layer in model.layers:
+            if isinstance(layer, LayerNormalization):
+                layer.trainable = False
+
+    if not is_fine_tune_embedding:
+        model.get_layer(layer_name.embedding_token).trainable = False
+        model.get_layer(layer_name.embedding_segment).trainable = False
+        model.get_layer(layer_name.embedding_position).trainable = False
+
+    return model
