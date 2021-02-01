@@ -29,7 +29,7 @@ except:
     import keras
     import keras.backend as K
 
-from bert_keras.model import build_bret
+from bert_keras.model.bert import build_bret
 from bert_keras.tokenizer import Tokenizer
 from bert_keras.utils import to_array
 
