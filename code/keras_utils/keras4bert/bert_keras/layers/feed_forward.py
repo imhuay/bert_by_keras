@@ -49,7 +49,8 @@ class FeedForward(keras.layers.Layer):
         self.activation = [keras.activations.get(act) for act in activation]
         self.use_bias = use_bias
         self.kernel_initializer = keras.initializers.get(kernel_initializer)
-
+        
+        self._dense_temp = 'dense_%s'
         for i, activation in enumerate(self.activation):
             i_dense = keras.layers.Dense(
                 units=self.units,
@@ -57,7 +58,7 @@ class FeedForward(keras.layers.Layer):
                 use_bias=self.use_bias,
                 kernel_initializer=self.kernel_initializer
             )
-            setattr(self, 'i%s_dense' % i, i_dense)
+            setattr(self, self._dense_temp % i, i_dense)
         # weights
         self.o_dense = None
         
@@ -85,8 +86,8 @@ class FeedForward(keras.layers.Layer):
         )
 
     def call(self, inputs, **kwargs):
-        x = self.i0_dense(inputs)
+        x = getattr(self, self._dense_temp % 0)(inputs)
         for i in range(1, len(self.activation)):
-            x = x * getattr(self, 'i%s_dense' % i)(inputs)
+            x = x * getattr(self, self._dense_temp % i)(inputs)
         x = self.o_dense(x)
         return x
