@@ -8,17 +8,11 @@ Author:
     huayang
     
 Subject:
-    extract_features
-    - 不同版本的 tf 版本输出可能会略有区别
-    - 以下输出基于 tf2.4 版本
+    如何使用 Bert 来抽取 sentence embedding 和 cls embedding（用于分类任务）
 
 References:
     https://github.com/bojone/bert4keras/blob/master/examples/basic_extract_features.py
-    https://github.com/CyberZHG/keras-bert/blob/master/demo/load_model/load_and_predict.py
 
-Other:
-    keras<2.4 或 tensorflow<2.4 的版本，tf.keras 和 keras 不能混用，之后的版本应该可以（未测试）
-    - 比如 keras==2.3.1 下 Input 层的 output_shape 为 (None, sequence_len)，而 keras==2.4.3 中为 [(None, sequence_len)]
 """
 import numpy as np
 
