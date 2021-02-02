@@ -8,7 +8,7 @@ Author:
     huayang
     
 Subject:
-    使用 BERT fine tune 来进行文本分类任务
+    如何 fine tune BERT 来进行文本分类任务
 """
 
 try:
