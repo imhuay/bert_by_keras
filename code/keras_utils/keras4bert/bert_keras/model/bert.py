@@ -44,7 +44,7 @@ class _OutputType:
 
 
 class _LayerName:
-    """各层的命名，用于加载 ckpt 时一一对应，避免写两遍"""
+    """各层的命名，用于加载 ckpt 和 fine-tune 时获取指定层，减少硬编码"""
 
     def __init__(self, n_transformer_block):
         """"""
@@ -54,60 +54,35 @@ class _LayerName:
         self.input_token = 'Input-Token'
         self.input_segment = 'Input-Segment'
         # embedding layer
-        self.embedding_token = 'Embedding-Token'
-        self.embedding_segment = 'Embedding-Segment'
-        self.embedding_token_segment = 'Embedding-Token-Segment'
-        self.embedding_position = 'Embedding-Position'
-        self.embedding_norm = 'Embedding-Norm'
-        self.embedding_dropout = 'Embedding-Dropout'
+        self.embed_token = 'Embedding-Token'
+        self.embed_segment = 'Embedding-Segment'
+        self.embed_add = 'Embedding-Add'
+        self.embed_position = 'Embedding-Position'
+        self.embed_norm = 'Embedding-Norm'
+        self.embed_dropout = 'Embedding-Dropout'
 
-        # transform_block
-        for block_index in range(n_transformer_block):
-            prefix_attr = 'transformer_%s' % block_index + '_%s'
-            prefix_layer = 'Transformer-%s' % block_index + '-%s'
-            setattr(self, prefix_attr % 'attention', prefix_layer % 'MultiHeadSelfAttention')
-            setattr(self, prefix_attr % 'attention_dropout', prefix_layer % 'MultiHeadSelfAttention-Dropout')
-            setattr(self, prefix_attr % 'attention_add', prefix_layer % 'MultiHeadSelfAttention-Add')
-            setattr(self, prefix_attr % 'attention_norm', prefix_layer % 'MultiHeadSelfAttention-Norm')
-            setattr(self, prefix_attr % 'feed_forward', prefix_layer % 'FeedForward')
-            setattr(self, prefix_attr % 'feed_forward_dropout', prefix_layer % 'FeedForward-Dropout')
-            setattr(self, prefix_attr % 'feed_forward_add', prefix_layer % 'FeedForward-Add')
-            setattr(self, prefix_attr % 'feed_forward_norm', prefix_layer % 'FeedForward-Norm')
+        # transformer block
+        self._transform_temp = 'Transformer-{block_index}-{sub_layer}'
+        # transform_sub_layer
+        self.attn = 'MultiHeadSelfAttention'
+        self.attn_dropout = 'MultiHeadSelfAttention-Dropout'
+        self.attn_add = 'MultiHeadSelfAttention-Add'
+        self.attn_norm = 'MultiHeadSelfAttention-Norm'
+        self.ffn = 'FeedForward'
+        self.ffn_dropout = 'FeedForward-Dropout'
+        self.ffn_add = 'FeedForward-Add'
+        self.ffn_norm = 'FeedForward-Norm'
 
         # output layer
-        self.pooler = 'Pooler'
-        self.pooler_dense = 'Pooler-Dense'
+        self.pool = 'Pool'
+        self.pool_dense = 'Pool-Dense'
         self.mlm_dense = 'MLM-Dense'
         self.mlm_norm = 'MLM-Norm'
         self.mlm_softmax = 'MLM-Softmax'
         self.nsp_softmax = 'NSP-Softmax'
-        
-    def _get_transformer_name(self, block_index, part):
-        return getattr(self, 'transformer_%s_%s' % (block_index, part))
-    
-    def get_transformer_attention(self, block_index):
-        return self._get_transformer_name(block_index, part='attention')
-    
-    def get_transformer_attention_dropout(self, block_index):
-        return self._get_transformer_name(block_index, part='attention_dropout')
-    
-    def get_transformer_attention_add(self, block_index):
-        return self._get_transformer_name(block_index, part='attention_add')
-    
-    def get_transformer_attention_norm(self, block_index):
-        return self._get_transformer_name(block_index, part='attention_norm')
-    
-    def get_transformer_feed_forward(self, block_index):
-        return self._get_transformer_name(block_index, part='feed_forward')
-    
-    def get_transformer_feed_forward_dropout(self, block_index):
-        return self._get_transformer_name(block_index, part='feed_forward_dropout')
-    
-    def get_transformer_feed_forward_add(self, block_index):
-        return self._get_transformer_name(block_index, part='feed_forward_add')
-    
-    def get_transformer_feed_forward_norm(self, block_index):
-        return self._get_transformer_name(block_index, part='feed_forward_norm')
+
+    def transformer(self, block_index, sub_layer):
+        return self._transform_temp.format(block_index=block_index, sub_layer=sub_layer)
 
 
 def build_bret(config_path=None,
@@ -270,21 +245,21 @@ def apply_embedding_layer(inputs,
                           max_sequence_len,
                           embedding_size,
                           dropout_rate,
-                          layer_name):
+                          layer_name: _LayerName):
     """"""
     x, s = inputs
     # embed_layer = keras.layers.Embedding(input_dim=vocab_size, output_dim=embedding_size, mask_zero=True,
     #                                      name='Embedding-Token')
     # embed_weights = embed_layer.embeddings  # 不能直接获取
     x, embed_weights = CustomEmbedding(input_dim=vocab_size, output_dim=embedding_size, mask_zero=True,
-                                       name=layer_name.embedding_token)(x)
+                                       name=layer_name.embed_token)(x)
     s = keras.layers.Embedding(input_dim=segment_vocab_size, output_dim=embedding_size,
-                               name=layer_name.embedding_segment)(s)
+                               name=layer_name.embed_segment)(s)
 
-    x = CustomAdd(name=layer_name.embedding_token_segment)([x, s])  # [x, s] 的顺序不能变
-    x = PositionEmbedding(input_dim=max_sequence_len, output_dim=embedding_size, name=layer_name.embedding_position)(x)
-    x = LayerNormalization(name=layer_name.embedding_norm)(x)
-    x = keras.layers.Dropout(dropout_rate, name=layer_name.embedding_dropout)(x)
+    x = CustomAdd(name=layer_name.embed_add)([x, s])  # [x, s] 的顺序不能变
+    x = PositionEmbedding(input_dim=max_sequence_len, output_dim=embedding_size, name=layer_name.embed_position)(x)
+    x = LayerNormalization(name=layer_name.embed_norm)(x)
+    x = keras.layers.Dropout(dropout_rate, name=layer_name.embed_dropout)(x)
 
     return x, embed_weights
 
@@ -298,26 +273,26 @@ def apply_transformer_block(inputs,
                             n_intermediate_unit,
                             hidden_act,
                             initializer,
-                            layer_name):
-    """Att --> Add --> LN --> FFN --> Add --> LN"""
+                            layer_name: _LayerName):
+    """Attn -> Drop -> Add -> LN -> FFN -> Drop -> Add -> LN"""
     x = inputs
     xi = x
     x = MultiHeadAttention(n_unit=n_hidden_unit,
                            n_head=n_attention_head,
                            n_unit_each_head=n_unit_each_head,
-                           name=layer_name.get_transformer_attention(block_index))([x, x, x])
-    x = keras.layers.Dropout(dropout_rate, name=layer_name.get_transformer_attention_dropout(block_index))(x)
-    x = keras.layers.Add(name=layer_name.get_transformer_attention_add(block_index))([xi, x])
-    x = LayerNormalization(name=layer_name.get_transformer_attention_norm(block_index))(x)
+                           name=layer_name.transformer(block_index, layer_name.attn))([x, x, x])
+    x = keras.layers.Dropout(dropout_rate, name=layer_name.transformer(block_index, layer_name.attn_dropout))(x)
+    x = keras.layers.Add(name=layer_name.transformer(block_index, layer_name.attn_add))([xi, x])
+    x = LayerNormalization(name=layer_name.transformer(block_index, layer_name.attn_norm))(x)
 
     xi = x
     x = FeedForward(units=n_intermediate_unit,
                     activation=hidden_act,
                     kernel_initializer=initializer,
-                    name=layer_name.get_transformer_feed_forward(block_index))(x)
-    x = keras.layers.Dropout(dropout_rate, name=layer_name.get_transformer_feed_forward_dropout(block_index))(x)
-    x = keras.layers.Add(name=layer_name.get_transformer_feed_forward_add(block_index))([xi, x])
-    x = LayerNormalization(name=layer_name.get_transformer_feed_forward_norm(block_index))(x)
+                    name=layer_name.transformer(block_index, layer_name.ffn))(x)
+    x = keras.layers.Dropout(dropout_rate, name=layer_name.transformer(block_index, layer_name.ffn_dropout))(x)
+    x = keras.layers.Add(name=layer_name.transformer(block_index, layer_name.ffn_add))([xi, x])
+    x = LayerNormalization(name=layer_name.transformer(block_index, layer_name.ffn_norm))(x)
 
     return x
 
@@ -333,29 +308,30 @@ def apply_output_layer(inputs,
     outputs = []
 
     x = inputs
-    outputs.append(x)  # sentence embedding
+    # sequence_embedding
+    outputs.append(x)
 
-    # 提取 [CLS] 向量
-    x = outputs[0]  # sentence embedding
-    x = keras.layers.Lambda(function=lambda tensor: tensor[:, 0], name=layer_name.pooler)(x)  # 提取 [CLS] embedding
+    # cls_embedding
+    x = outputs[0]  # sequence_embedding
+    x = keras.layers.Lambda(function=lambda tensor: tensor[:, 0], name=layer_name.pool)(x)  # 提取 [CLS] embedding
     x = keras.layers.Dense(units=n_hidden_unit, activation='tanh', kernel_initializer=initializer,
-                           name=layer_name.pooler_dense)(x)
-    outputs.append(x)  # [CLS] 向量
+                           name=layer_name.pool_dense)(x)
+    outputs.append(x)  # cls_embedding
 
-    # Task1: Masked Language
-    x = outputs[0]  # sentence embedding
+    # mlm_probability (Task 1)
+    x = outputs[0]  # sequence_embedding
     x = keras.layers.Dense(units=n_hidden_unit, activation=hidden_activation, name=layer_name.mlm_dense)(x)
     x = LayerNormalization(name=layer_name.mlm_norm)(x)
     x = EmbeddingSimilarity(name=layer_name.mlm_softmax)([x, embed_weights])
-    outputs.append(x)  # mlm softmax
+    outputs.append(x)  # mlm_probability
 
-    # Task2: Next Sentence
-    x = outputs[1]  # [CLS] 向量
+    # nsp_probability (Task 2)
+    x = outputs[1]  # cls_embedding
     x = keras.layers.Dense(units=2, activation='softmax', kernel_initializer=initializer,
                            name=layer_name.nsp_softmax)(x)
-    outputs.append(x)  # nsp softmax
+    outputs.append(x)  # nsp_probability
 
-    return outputs  # [sequecen embedding, cls embedding, mlm softmax, nsp softmax]
+    return outputs  # [sequence_embedding, cls_embedding, mlm_probability, nsp_probability]
 
 
 def load_model_weights_from_checkpoint(model,
@@ -366,23 +342,23 @@ def load_model_weights_from_checkpoint(model,
     """
     _loader = lambda name: tf.train.load_variable(checkpoint_file, name)
 
-    model.get_layer(name=layer_name.embedding_token).set_weights([
+    model.get_layer(name=layer_name.embed_token).set_weights([
         _loader('bert/embeddings/word_embeddings'),
     ])
-    model.get_layer(name=layer_name.embedding_segment).set_weights([
+    model.get_layer(name=layer_name.embed_segment).set_weights([
         _loader('bert/embeddings/token_type_embeddings'),
     ])
-    model.get_layer(name=layer_name.embedding_position).set_weights([
+    model.get_layer(name=layer_name.embed_position).set_weights([
         _loader('bert/embeddings/position_embeddings')[:config['max_position_len'], :],
     ])
-    model.get_layer(name=layer_name.embedding_norm).set_weights([
+    model.get_layer(name=layer_name.embed_norm).set_weights([
         _loader('bert/embeddings/LayerNorm/gamma'),
         _loader('bert/embeddings/LayerNorm/beta'),
     ])
 
     for block_index in range(config['n_transformer_block']):
         weight_prefix = 'bert/encoder/layer_%d/' % block_index
-        model.get_layer(name=layer_name.get_transformer_attention(block_index)).set_weights([
+        model.get_layer(name=layer_name.transformer(block_index, layer_name.attn)).set_weights([
             _loader(weight_prefix + 'attention/self/query/kernel'),
             _loader(weight_prefix + 'attention/self/query/bias'),
             _loader(weight_prefix + 'attention/self/key/kernel'),
@@ -392,22 +368,22 @@ def load_model_weights_from_checkpoint(model,
             _loader(weight_prefix + 'attention/output/dense/kernel'),
             _loader(weight_prefix + 'attention/output/dense/bias'),
         ])
-        model.get_layer(name=layer_name.get_transformer_attention_norm(block_index)).set_weights([
+        model.get_layer(name=layer_name.transformer(block_index, layer_name.attn_norm)).set_weights([
             _loader(weight_prefix + 'attention/output/LayerNorm/gamma'),
             _loader(weight_prefix + 'attention/output/LayerNorm/beta'),
         ])
-        model.get_layer(name=layer_name.get_transformer_feed_forward(block_index)).set_weights([
+        model.get_layer(name=layer_name.transformer(block_index, layer_name.ffn)).set_weights([
             _loader(weight_prefix + 'intermediate/dense/kernel'),
             _loader(weight_prefix + 'intermediate/dense/bias'),
             _loader(weight_prefix + 'output/dense/kernel'),
             _loader(weight_prefix + 'output/dense/bias'),
         ])
-        model.get_layer(name=layer_name.get_transformer_feed_forward_norm(block_index)).set_weights([
+        model.get_layer(name=layer_name.transformer(block_index, layer_name.ffn_norm)).set_weights([
             _loader(weight_prefix + 'output/LayerNorm/gamma'),
             _loader(weight_prefix + 'output/LayerNorm/beta'),
         ])
 
-    model.get_layer(name=layer_name.pooler_dense).set_weights([
+    model.get_layer(name=layer_name.pool_dense).set_weights([
         _loader('bert/pooler/dense/kernel'),
         _loader('bert/pooler/dense/bias'),
     ])
@@ -460,8 +436,8 @@ def model_fine_tune_config(model: keras.Model,
     if n_fine_tune_transformer_block and n_fine_tune_transformer_block <= layer_name.n_transformer_block:
         # 相当于把剩下的 block 调整的不可训练
         for block_index in range(layer_name.n_transformer_block - n_fine_tune_transformer_block):
-            model.get_layer(getattr(layer_name, 'transformer_%s_attention' % block_index)).trainable = False
-            model.get_layer(getattr(layer_name, 'transformer_%s_feed_forward' % block_index)).trainable = False
+            model.get_layer(layer_name.transformer(block_index, layer_name.attn)).trainable = False
+            model.get_layer(layer_name.transformer(block_index, layer_name.ffn)).trainable = False
 
     if not is_fine_tune_norm:
         for layer in model.layers:
@@ -469,8 +445,8 @@ def model_fine_tune_config(model: keras.Model,
                 layer.trainable = False
 
     if not is_fine_tune_embedding:
-        model.get_layer(layer_name.embedding_token).trainable = False
-        model.get_layer(layer_name.embedding_segment).trainable = False
-        model.get_layer(layer_name.embedding_position).trainable = False
+        model.get_layer(layer_name.embed_token).trainable = False
+        model.get_layer(layer_name.embed_segment).trainable = False
+        model.get_layer(layer_name.embed_position).trainable = False
 
     return model
