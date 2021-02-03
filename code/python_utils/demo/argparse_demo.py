@@ -78,6 +78,7 @@ if __name__ == '__main__':
     # 模拟命令行参数
     test_arg_ls = 'FOO --bar 2 --ccc --ddd'.split(' ')
     args = get_args(test_arg_ls)
+    args.some_new = 1  # 可以直接加新的参数
     for k, v in args.__dict__.items():
         print(k, v)
     """
