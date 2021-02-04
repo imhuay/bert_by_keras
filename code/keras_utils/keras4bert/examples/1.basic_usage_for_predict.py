@@ -30,7 +30,7 @@ except:
     import keras.backend as K
 
 from bert_keras.model.bert import build_bret
-from bert_keras.tokenizer import Tokenizer
+from bert_keras.utils.tokenizer import Tokenizer
 from bert_keras.utils import to_array
 
 config_path = '../model_ckpt/chinese_L-12_H-768_A-12/bert_config.json'
