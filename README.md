@@ -5,6 +5,6 @@ study_note
 ---
 个人学习笔记
 
-## 子仓库
+### 子仓库
 - [imhuay/bert_by_keras](https://github.com/imhuay/bert_by_keras)
 - [imhuay/keras_utils](https://github.com/imhuay/keras_utils)
