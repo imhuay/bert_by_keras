@@ -22,10 +22,13 @@ if __name__ == '__main__':
                               is_shuffle=True,
                               val_percent=0.4,
                               label_mode='one_hot',
-                              batch_size=3)
+                              batch_size=3,
+                              max_len=10)
 
-    for it in ds:
-        print(K.shape(it[0]), K.shape(it[1]))
+    for it in ds.take(1):
+        # print(K.shape(it[0]), K.shape(it[1]))
+        print(it[0])
+        print(it[1])
 
     print()
     for it in ds_val:
