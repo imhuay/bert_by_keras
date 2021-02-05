@@ -14,5 +14,5 @@ bert_by_keras
 
 
 ### TODO
-- [] ALBERT
+- [ ] ALBERT
     - https://github.com/google-research/ALBERT
