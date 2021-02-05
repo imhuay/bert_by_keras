@@ -68,10 +68,10 @@ def get_dataset_from_directory(dir_path,
     train_labels = []
     for class_name, samples in class_files_dict.items():
         n_val_samples = int(val_percent * len(samples))
-        val_samples += samples[:-n_val_samples]
-        val_labels += [class_label_dict[class_name]] * len(samples[:-n_val_samples])
-        train_samples += samples[-n_val_samples:]
-        train_labels += [class_label_dict[class_name]] * len(samples[-n_val_samples:])
+        val_samples += samples[-n_val_samples:]
+        val_labels += [class_label_dict[class_name]] * len(samples[-n_val_samples:])
+        train_samples += samples[:-n_val_samples]
+        train_labels += [class_label_dict[class_name]] * len(samples[:-n_val_samples])
 
     # print(train_samples[:3])
     ds_train = get_dataset(train_samples, train_labels, n_class)
