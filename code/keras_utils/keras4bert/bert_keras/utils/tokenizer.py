@@ -13,93 +13,9 @@ Subject:
 References:
     https://github.com/google-research/bert/blob/master/tokenization.py
 """
-
+import os
 import collections
 import unicodedata
-
-
-class Tokenizer(object):
-    """End-to-end tokenizer, containing word-piece_tokenizer."""
-
-    def __init__(self, vocab_file,
-                 do_lower_case=True,
-                 token_cls='[CLS]',
-                 token_sep='[SEP]',
-                 token_unk='[UNK]',
-                 token_mask='[MASK]',
-                 pad_index=0,
-                 verbose=0):
-        self.vocab = load_vocab(vocab_file)
-        if verbose > 0:
-            print('Vocab size=%d' % len(self.vocab))
-        self.inv_vocab = {v: k for k, v in self.vocab.items()}
-        self.basic_tokenize = lambda text: tokenize(text, do_lower_case)
-        self.word_piece_tokenize = WordPieceTokenizer(vocab=self.vocab).tokenize
-        self._token_cls = token_cls
-        self._token_sep = token_sep
-        self._token_unk = token_unk
-        self._pad_index = pad_index
-        self._token_mask = token_mask
-
-    def encode(self, first, second=None, max_len=None):
-        first_tokens = self.tokenize(first)
-        second_tokens = self.tokenize(second) if second is not None else None
-        self._truncate(first_tokens, second_tokens, max_len)
-        tokens, first_len, second_len = self._pack(first_tokens, second_tokens)
-
-        token_ids = self._convert_tokens_to_ids(tokens)
-        segment_ids = [0] * first_len + [1] * second_len
-
-        if max_len is not None:
-            pad_len = max_len - first_len - second_len
-            token_ids += [self._pad_index] * pad_len
-            segment_ids += [0] * pad_len
-
-        return token_ids, segment_ids
-
-    def tokenize(self, text):
-        split_tokens = []
-        for token in self.basic_tokenize(text):
-            for sub_token in self.word_piece_tokenize(token):
-                split_tokens.append(sub_token)
-
-        return split_tokens
-
-    def _convert_tokens_to_ids(self, tokens):
-        return convert_by_vocab(self.vocab, tokens)
-
-    def _convert_ids_to_tokens(self, ids):
-        return convert_by_vocab(self.inv_vocab, ids)
-    
-    @property
-    def mask_id(self):
-        return self._convert_tokens_to_ids([self._token_mask])[0]
-
-    def _pack(self, first_tokens, second_tokens=None):
-        first_packed_tokens = [self._token_cls] + first_tokens + [self._token_sep]
-        if second_tokens is not None:
-            second_packed_tokens = second_tokens + [self._token_sep]
-            return first_packed_tokens + second_packed_tokens, len(first_packed_tokens), len(second_packed_tokens)
-        else:
-            return first_packed_tokens, len(first_packed_tokens), 0
-
-    @staticmethod
-    def _truncate(first_tokens, second_tokens, max_len):
-        """"""
-        if max_len is None:
-            return
-
-        if second_tokens is not None:
-            while True:
-                total_len = len(first_tokens) + len(second_tokens)
-                if total_len <= max_len - 3:  # 3 for [CLS] .. tokens_a .. [SEP] .. tokens_b [SEP]
-                    break
-                if len(first_tokens) > len(second_tokens):
-                    first_tokens.pop()
-                else:
-                    second_tokens.pop()
-        else:
-            del first_tokens[max_len - 2:]  # 2 for [CLS] .. tokens .. [SEP]
 
 
 def convert_by_vocab(vocab, items):
@@ -375,8 +291,110 @@ class WordPieceTokenizer(object):
         return output_tokens
 
 
-# tokenizer = Tokenizer('./vocab/vocab_21128.txt')
+class Tokenizer(object):
+    """End-to-end tokenizer, containing word-piece_tokenizer."""
 
+    def __init__(self, vocab_file,
+                 do_lower_case=True,
+                 token_cls='[CLS]',
+                 token_sep='[SEP]',
+                 token_unk='[UNK]',
+                 token_mask='[MASK]',
+                 pad_index=0,
+                 verbose=0):
+        self.vocab = load_vocab(vocab_file)
+        if verbose > 0:
+            print('Vocab size=%d' % len(self.vocab))
+        self.inv_vocab = {v: k for k, v in self.vocab.items()}
+        self.basic_tokenize = lambda text: tokenize(text, do_lower_case)
+        self.word_piece_tokenize = WordPieceTokenizer(vocab=self.vocab).tokenize
+        self._token_cls = token_cls
+        self._token_sep = token_sep
+        self._token_unk = token_unk
+        self._pad_index = pad_index
+        self._token_mask = token_mask
+
+    def encode(self, txt1, txt2=None, max_len=None):
+        tokens_txt1 = self.tokenize(txt1)
+        tokens_txt2 = self.tokenize(txt2) if txt2 is not None else None
+        self._truncate(tokens_txt1, tokens_txt2, max_len)
+        tokens, len_txt1, len_txt2 = self._pack(tokens_txt1, tokens_txt2)
+
+        tokens_id = self._convert_tokens_to_ids(tokens)
+        segments_id = [0] * len_txt1 + [1] * len_txt2
+
+        if max_len is not None:
+            pad_len = max_len - len_txt1 - len_txt2
+            tokens_id += [self._pad_index] * pad_len
+            segments_id += [0] * pad_len
+
+        return tokens_id, segments_id
+
+    def tokenize(self, text):
+        split_tokens = []
+        for token in self.basic_tokenize(text):
+            for sub_token in self.word_piece_tokenize(token):
+                split_tokens.append(sub_token)
+
+        return split_tokens
+
+    def _convert_tokens_to_ids(self, tokens):
+        return convert_by_vocab(self.vocab, tokens)
+
+    def _convert_ids_to_tokens(self, ids):
+        return convert_by_vocab(self.inv_vocab, ids)
+
+    @property
+    def mask_id(self):
+        return self._convert_tokens_to_ids([self._token_mask])[0]
+
+    def _pack(self, tokens_1st, tokens_2nd=None):
+        packed_tokens_1st = [self._token_cls] + tokens_1st + [self._token_sep]
+        if tokens_2nd is not None:
+            packed_tokens_2nd = tokens_2nd + [self._token_sep]
+            return packed_tokens_1st + packed_tokens_2nd, len(packed_tokens_1st), len(packed_tokens_2nd)
+        else:
+            return packed_tokens_1st, len(packed_tokens_1st), 0
+
+    @staticmethod
+    def _truncate(tokens_1st, tokens_2nd, max_len):
+        """"""
+        if max_len is None:
+            return
+
+        if tokens_2nd is not None:
+            while True:
+                total_len = len(tokens_1st) + len(tokens_2nd)
+                if total_len <= max_len - 3:  # 3 for [CLS] .. tokens_a .. [SEP] .. tokens_b [SEP]
+                    break
+                if len(tokens_1st) > len(tokens_2nd):
+                    tokens_1st.pop()
+                else:
+                    tokens_2nd.pop()
+        else:
+            del tokens_1st[max_len - 2:]  # 2 for [CLS] .. tokens .. [SEP]
+
+
+# 不是单例
+# def get_tokenizer(vocab_file=None, **kwargs):
+#     """
+#
+#     Args:
+#         vocab_file:
+#
+#     Returns:
+#
+#     """
+#     if vocab_file is None:
+#         pwd = os.path.dirname(__file__)
+#         vocab_file = os.path.join(pwd, '../data/vocab/vocab_21128.txt')
+#
+#     tokenizer = Tokenizer(vocab_file, **kwargs)
+#     return tokenizer
+
+
+# 模块内的变量默认为单例模式
+tokenizer = Tokenizer(os.path.join(os.path.dirname(__file__), '../data/vocab/vocab_21128.txt'))
 
 if __name__ == '__main__':
     """"""
@@ -385,13 +403,10 @@ if __name__ == '__main__':
     # ['我爱python，我爱编程；I', 'love', 'python,', 'I', 'like', 'programming.']
     # print(ret)
 
-    vocab_file = r'vocab/vocab_21128.txt'
-    # vocab_file = r'/Users/huayang/workspace/model/bert/uncased_L-12_H-768_A-12/vocab.txt'
+    # vocab_file = r'../data/vocab/vocab_21128.txt'
     # vocab = load_vocab(vocab_file)
     # print(vocab)
-    # OrderedDict([('[PAD]', 0), ('[unused1]', 1), ('[unused2]', 2), ('[unused3]', 3), ('[unused4]', 4), ('[unused5]', 5)
 
-    tokenizer = Tokenizer(vocab_file, verbose=1)
     token_ids, segment_ids = tokenizer.encode('语言模型')
     print(token_ids, segment_ids)
     # model.predict([token_ids, segment_ids]
