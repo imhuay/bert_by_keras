@@ -54,10 +54,10 @@ def gen_data_set(data_path,
                  batch_size=32,
                  val_percent=0.,
                  is_shuffle=True,
-                 label_mode='int',
+                 label_mode='one_hot',
                  n_class=None,
                  sep='\t',
-                 max_len=120,
+                 max_len=128,
                  random_seed=1):
     """
     从文件生成训练集、验证集和测试集
@@ -75,7 +75,7 @@ def gen_data_set(data_path,
         batch_size:
         val_percent: 验证集比例，默认为 0.，即不划分验证集
         is_shuffle:
-        label_mode: 标签类型，默认 'int'，传入其他值表示转成 one_hot 形式
+        label_mode: 标签类型，默认 'one_hot'，除非传入 'int'，否则传入其他值都表示转成 one_hot 形式
         n_class: 默认为 None，若不传入，则以文件中 label 数量为准
         sep: 文件中每行的分隔符，默认 '\t'
         max_len: 序列长度，默认 120
