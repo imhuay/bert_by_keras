@@ -19,6 +19,7 @@ except:
     import keras.backend as K
 
 from bert_keras.model.bert import build_bret, model_fine_tune_config
+from bert_keras.utils.data_process import gen_data_set
 
 
 def build_model(config_path, checkpoint_path, sequence_len, n_class):
@@ -39,9 +40,10 @@ def build_model(config_path, checkpoint_path, sequence_len, n_class):
 
 def main():
     """"""
-    config_path = '../model_ckpt/chinese_L-12_H-768_A-12/bert_config.json'
-    checkpoint_path = '../model_ckpt/chinese_L-12_H-768_A-12/bert_model.ckpt'
-    vocab_path = '../model_ckpt/chinese_L-12_H-768_A-12/vocab.txt'
+    model_name = 'chinese_wwm_ext_L-12_H-768_A-12'
+    config_path = '../model_ckpt/%s/bert_config.json' % model_name
+    checkpoint_path = '../model_ckpt/%s/bert_model.ckpt' % model_name
+    vocab_path = '../model_ckpt/%s/vocab.txt' % model_name
 
     n_epoch = 5
     sequence_len = 128
@@ -65,12 +67,24 @@ def main():
         if layer.trainable_weights:  # 使用 trainable 判断会把所有层都打印出来，不知道为什么
             print(layer.name)
 
-    model.compile(loss='sparse_categorical_crossentropy',
-                  optimizer=keras.optimizers.Adam(1e-5),  # 使用足够小的学习率，建议 1e-5 ~ 5e-5
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=keras.optimizers.Adam(2e-5),  # 使用足够小的学习率，建议 1e-5 ~ 5e-5
                   metrics=['accuracy'])
 
-    # TODO: 准备数据
-    # model.fit(ds_train, epochs=n_epoch, verbose=1)
+    # 数据准备
+    data_path = r'/Users/huayang/workspace/my/study_note/code/keras_utils/keras4bert/data_set/lcqmc_demo/lcqmc.train.data'
+    ds_train, ds_val = gen_data_set(data_path,
+                                    max_len=sequence_len,
+                                    batch_size=8,
+                                    # with_label=False,
+                                    val_percent=0.2)
+
+    # 训练
+    for x, y in ds_train.take(1):
+        print(K.shape(x))
+        print(K.shape(y))
+        # print(it)
+    model.fit(ds_train, epochs=n_epoch, validation_data=ds_val, verbose=1)
 
 
 if __name__ == '__main__':

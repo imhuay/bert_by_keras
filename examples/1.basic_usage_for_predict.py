@@ -65,8 +65,9 @@ token_ids_inputs, segment_ids_inputs = to_array([token_ids], [segment_ids])
 inputs = [token_ids_inputs, segment_ids_inputs]
 
 print('\n--- Predicting ---')
+print('输入 shape:', K.int_shape(np.array(inputs)))
 pred = model_fix.predict(inputs)
-print(K.int_shape(pred))
+print('输出 shape:', K.int_shape(pred))
 pred_ids = pred[0][1:3].argmax(axis=1).tolist()  # 提取预测结果的 token id
 # 期望结果
 ret_except = [(3144, '数'), (2110, '学')]
@@ -75,7 +76,7 @@ ret = [(id_, tokenizer.inv_vocab[id_]) for id_ in pred_ids]
 print('预测的 token_id 及对应的字:', ret)  # [3144, 2110] -> ['数', '学']
 assert ret == ret_except, '实际结果与期望值不符'
 """
-(1, 100, 21128)
+输出 shape: (1, 100, 21128)
 预测的 token_id 及对应的字: [(3144, '数'), (2110, '学')]
 """
 
@@ -90,11 +91,11 @@ print('待预测的下一句1："%s"' % sentence_1)
 sentence_2 = '任何一个希尔伯特空间都有一族标准正交基。'
 print('待预测的下一句2："%s"' % sentence_2)
 
-token_ids_1, segment_ids_1 = tokenizer.encode(first=sentence, second=sentence_1, max_len=sequence_len)
+token_ids_1, segment_ids_1 = tokenizer.encode(txt1=sentence, txt2=sentence_1, max_len=sequence_len)
 print('第一组生成的 token_ids:', token_ids_1)
 print('第一组生成的 segment_ids:', segment_ids_1)
 
-token_ids_2, segment_ids_2 = tokenizer.encode(first=sentence, second=sentence_2, max_len=sequence_len)
+token_ids_2, segment_ids_2 = tokenizer.encode(txt1=sentence, txt2=sentence_2, max_len=sequence_len)
 print('第二组生成的 token_ids:', token_ids_2)
 print('第二组生成的 segment_ids:', segment_ids_2)
 
@@ -103,7 +104,9 @@ segment_ids_inputs = to_array([segment_ids_1, segment_ids_2])
 inputs = [token_ids_inputs, segment_ids_inputs]
 
 print('\n--- Predicting ---')
+print('输入 shape:', K.int_shape(np.array(inputs)))
 ret = model_fix.predict(inputs)
+print('输出 shape:', K.int_shape(ret))
 # print(ret.tolist())
 # 期望结果
 ret_except = np.array([[0.9999082088470459, 9.180504275718704e-05], [0.0010862667113542557, 0.9989137649536133]])
@@ -111,6 +114,7 @@ assert np.allclose(ret, ret_except, atol=0.001), '实际结果与期望值不符
 for i, it in enumerate(ret):
     print('第%s组是下一句的概率为：%.5f' % (i + 1, it[0]))
 """
+输出 shape: (2, 2)
 第1组是下一句的概率为：0.99991
 第2组是下一句的概率为：0.00109
 """
