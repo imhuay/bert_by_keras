@@ -11,20 +11,20 @@ Subject:
     
 """
 
-from bert_keras.utils.data_process import gen_data_set
+from bert_keras.utils.data_process import gen_data_set_basic
 import keras.backend as K
 
 
 if __name__ == '__main__':
     """"""
-    ds, ds_val = gen_data_set(r'../data_set/lcqmc_demo/lcqmc.train.data',
-                              with_label=True,
-                              with_txt2=True,
-                              is_shuffle=True,
-                              val_percent=0.4,
-                              label_mode='one_hot',
-                              batch_size=3,
-                              max_len=10)
+    ds, ds_val = gen_data_set_basic(r'../data_set/lcqmc_demo/lcqmc.train.data',
+                                    with_label=True,
+                                    with_txt2=True,
+                                    is_shuffle=True,
+                                    val_percent=0.4,
+                                    label_mode='one_hot',
+                                    batch_size=3,
+                                    max_len=10)
 
     # for it in ds.take(1):
     for it in ds:
