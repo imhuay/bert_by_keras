@@ -22,31 +22,6 @@ import tensorflow as tf
 from .backend import to_array, TF_FLOAT
 from .tokenizer import tokenizer as _tokenizer
 
-print(tf.__version__)
-
-
-def _txt_to_array(txt1,
-                  txt2=None,
-                  label=None,
-                  max_len=None,
-                  one_hot=True,
-                  tokenizer=_tokenizer):
-    """"""
-    token_ids, segment_ids = tokenizer.encode(txt1.numpy(), max_len=8)
-    token_ids, segment_ids = to_array([token_ids], [segment_ids])
-    # print(token_ids, segment_ids)
-    return [token_ids, segment_ids]
-    # txt_arr =
-    # if label:
-    #     return
-
-
-def encode_fn(txt):
-    """"""
-    ret = tf.py_function(_txt_to_array, [txt], Tout=(tf.int64, tf.int64))
-
-    return ret
-
 
 def gen_data_set(data_path,
                  with_label=True,
@@ -93,7 +68,7 @@ def gen_data_set(data_path,
         return tokens, segments, label
 
     def _get_ds(inp_token, inp_segment, inp_label):
-        ds = tf.data.Dataset.from_tensor_slices((inp_token, inp_segment)).map(lambda x1, x2: [x1, x2])
+        ds = tf.data.Dataset.from_tensor_slices((inp_token, inp_segment))  # .map(lambda x1, x2: [x1, x2])
         if with_label:
             ds_label = tf.data.Dataset.from_tensor_slices(inp_label)
             if label_mode != 'int':
