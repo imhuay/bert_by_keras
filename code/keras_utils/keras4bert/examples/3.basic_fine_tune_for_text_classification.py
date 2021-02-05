@@ -72,7 +72,7 @@ def main():
                   metrics=['accuracy'])
 
     # 数据准备
-    data_path = r'/Users/huayang/workspace/my/study_note/code/keras_utils/keras4bert/data_set/lcqmc_demo/lcqmc.train.data'
+    data_path = r'../data_set/lcqmc_demo/lcqmc.train.data'
     ds_train, ds_val = gen_data_set(data_path,
                                     max_len=sequence_len,
                                     batch_size=8,
