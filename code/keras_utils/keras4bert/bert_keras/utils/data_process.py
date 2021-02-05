@@ -19,21 +19,22 @@ from multiprocessing.pool import ThreadPool
 import numpy as np
 import tensorflow as tf
 
-from .backend import to_array, TF_FLOAT
+from .backend import TF_FLOAT
 from .tokenizer import tokenizer as _tokenizer
 
 
-def gen_data_set(data_path,
-                 with_label=True,
-                 with_txt2=False,
-                 batch_size=32,
-                 val_percent=0.,
-                 is_shuffle=True,
-                 label_mode='one_hot',
-                 n_class=None,
-                 sep='\t',
-                 max_len=128,
-                 random_seed=1):
+def gen_data_set_basic(data_path,
+                       with_label=True,
+                       with_txt2=False,
+                       batch_size=32,
+                       val_percent=0.,
+                       is_shuffle=True,
+                       label_mode='one_hot',
+                       n_class=None,
+                       sep='\t',
+                       max_len=128,
+                       random_seed=1,
+                       tokenizer=_tokenizer):
     """
     从文件生成训练集、验证集和测试集
 
@@ -55,6 +56,7 @@ def gen_data_set(data_path,
         sep: 文件中每行的分隔符，默认 '\t'
         max_len: 序列长度，默认 120
         random_seed:
+        tokenizer: 分词器，默认使用基于 vocab_21128.txt 词表的内置对象
 
     Returns:
 
@@ -62,22 +64,22 @@ def gen_data_set(data_path,
     assert 0. <= val_percent < 1., 'val_percent 须在 [0, 1) 范围内。'
     is_val = val_percent > 0.
 
-    def _encoder(txt1, txt2=None, label=None):
-        tokens, segments = _tokenizer.encode(txt1, txt2, max_len)
-        label = int(label) if label else label
-        return tokens, segments, label
+    def _encoder(_txt1, _txt2=None, _label=None):
+        _tokens, _segments = tokenizer.encode(_txt1, _txt2, max_len)
+        _label = int(_label) if _label else _label
+        return _tokens, _segments, _label
 
-    def _get_ds(inp_token, inp_segment, inp_label):
-        ds = tf.data.Dataset.from_tensor_slices((inp_token, inp_segment))  # .map(lambda x1, x2: [x1, x2])
+    def _get_ds(_inp_token, _inp_segment, _inp_label):
+        ds = tf.data.Dataset.from_tensor_slices((_inp_token, _inp_segment))  # .map(lambda x1, x2: [x1, x2])
         if with_label:
-            ds_label = tf.data.Dataset.from_tensor_slices(inp_label)
+            ds_label = tf.data.Dataset.from_tensor_slices(_inp_label)
             if label_mode != 'int':
                 assert n_class is not None, 'label_mode != "int" 时，必须指定 n_class'
                 ds_label = ds_label.map(lambda x: tf.one_hot(x, n_class, dtype=TF_FLOAT))
             ds = tf.data.Dataset.zip((ds, ds_label))
         ds = ds.batch(batch_size)
         return ds
-    
+
     txt1_ls, txt2_ls, label_ls = [], [], []
     label_st = set()
     with open(data_path) as f:
@@ -86,11 +88,11 @@ def gen_data_set(data_path,
             txt1_ls.append(row[0])
             if len(row) <= 1:
                 continue
-                
+
             txt2_ls.append(row[1]) if with_txt2 else txt2_ls.append(None)
             label_ls.append(row[-1]) if with_label else label_ls.append(None)
             label_st.add(row[-1])
-    
+
     if n_class is None:
         n_class = len(label_st)
 
@@ -101,7 +103,7 @@ def gen_data_set(data_path,
             inp_token.append(tokens)
             inp_segment.append(segments)
             inp_label.append(label)
-    
+
     # shuffle 在划分验证集之前
     if is_shuffle:
         inp_zip = list(zip(inp_token, inp_segment, inp_label))
@@ -115,15 +117,15 @@ def gen_data_set(data_path,
         inp_token_val = inp_token[-n_val_samples:]
         inp_segment_val = inp_segment[-n_val_samples:]
         inp_label_val = inp_label[-n_val_samples:]
-        
+
         inp_token = inp_token[:-n_val_samples]
         inp_segment = inp_segment[:-n_val_samples]
         inp_label = inp_label[:-n_val_samples]
-        
+
     ds_train = _get_ds(inp_token, inp_segment, inp_label)
-    
+
     if is_val:
         ds_val = _get_ds(inp_token_val, inp_segment_val, inp_label_val)
         return ds_train, ds_val
-    
+
     return ds_train
