@@ -21,6 +21,9 @@ except:
     import keras.backend as K
 
 
+TF_FLOAT = tf.float32
+
+
 def gelu(x):
     """An approximation of gelu.
 
