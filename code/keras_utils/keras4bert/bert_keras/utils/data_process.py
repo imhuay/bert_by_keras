@@ -40,9 +40,10 @@ def gen_data_set_basic(data_path,
 
     Notes:
         - Bert 是一个双输入模型（输出视情况），每个 step 的输入 shape 为 (2, batch_size, sequence_len)；
-          为了构造这个形式的 data_set，需要一些特殊处理；
-        - tf.Dataset 好像是支持直接生成多输入的，但是没在 API 里面找到示例，可以参考：
-          使用`tf.data.Dataset`创建多输入Dataset-CSDN博客 | https://blog.csdn.net/qq_39238461/article/details/109160170）
+
+    References:
+        - Tensorflow多输入模型构建以及Dataset数据构建-CSDN博客 | https://blog.csdn.net/qq_35869630/article/details/106313872
+        - 使用`tf.data.Dataset`创建多输入Dataset-CSDN博客 | https://blog.csdn.net/qq_39238461/article/details/109160170
 
     Args:
         data_path:
