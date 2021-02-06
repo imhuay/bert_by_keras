@@ -80,15 +80,26 @@ def gen_data_set_basic(data_path,
         ds = ds.batch(batch_size)
         return ds
 
+    def _n_row_check():
+        # 判断一行应该有几个数据
+        if with_label and with_txt2:
+            return 3
+        elif not with_label and not with_txt2:
+            return 1
+        else:
+            return 2
+
     txt1_ls, txt2_ls, label_ls = [], [], []
     label_st = set()
+
+    n_row = _n_row_check()
     with open(data_path) as f:
         for ln in f:
             row = ln.strip().split(sep)
-            txt1_ls.append(row[0])
-            if len(row) <= 1:
+            if n_row != len(row):
                 continue
 
+            txt1_ls.append(row[0])
             txt2_ls.append(row[1]) if with_txt2 else txt2_ls.append(None)
             label_ls.append(row[-1]) if with_label else label_ls.append(None)
             label_st.add(row[-1])
