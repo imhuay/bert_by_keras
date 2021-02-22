@@ -8,10 +8,8 @@ Author:
     huayang
     
 Subject:
-    数据处理工具函数
+    生成训练集、测试集
 
-Notes:
-    tf.Dataset 虽然支持多输入，但是不如单输入方便
 """
 
 from multiprocessing.pool import ThreadPool
@@ -23,7 +21,7 @@ from .backend import TF_FLOAT
 from .tokenizer import tokenizer as _tokenizer
 
 
-def gen_data_set_basic(data_path,
+def get_data_set_basic(data_path,
                        with_label=True,
                        with_txt2=False,
                        batch_size=32,
