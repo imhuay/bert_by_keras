@@ -13,6 +13,9 @@ Subject:
 References:
     https://github.com/bojone/bert4keras/blob/master/examples/basic_extract_features.py
 
+运行环境:
+    - tensorflow==2.4
+    - tensorflow==2.0 + keras==2.3.1
 """
 import numpy as np
 
