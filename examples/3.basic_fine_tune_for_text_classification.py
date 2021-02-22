@@ -3,13 +3,15 @@
 """
 Time:
     2021-02-01 00:42
-    
+
 Author:
     huayang
-    
+
 Subject:
     如何 fine tune BERT 来进行文本分类任务
 """
+import os
+import argparse
 
 try:
     import tensorflow.keras as keras
@@ -38,18 +40,13 @@ def build_model(config_path, checkpoint_path, sequence_len, n_class):
     return model, layer_name
 
 
-def main():
+def main(args):
     """"""
-    model_name = 'chinese_wwm_ext_L-12_H-768_A-12'
-    config_path = '../model_ckpt/%s/bert_config.json' % model_name
-    checkpoint_path = '../model_ckpt/%s/bert_model.ckpt' % model_name
-    vocab_path = '../model_ckpt/%s/vocab.txt' % model_name
+    config_path = os.path.join(args.ckpt_path, 'bert_config.json')
+    checkpoint_path = os.path.join(args.ckpt_path, 'bert_model.ckpt')
+    vocab_path = os.path.join(args.ckpt_path, 'vocab.txt')
 
-    n_epoch = 5
-    sequence_len = 128
-    n_class = 2
-
-    model, layer_name = build_model(config_path, checkpoint_path, sequence_len, n_class)
+    model, layer_name = build_model(config_path, checkpoint_path, args.sequence_len, args.n_class)
     model.summary(line_length=200)
 
     # 控制微调哪些层
@@ -72,21 +69,110 @@ def main():
                   metrics=['accuracy'])
 
     # 数据准备
-    data_path = r'../data_set/lcqmc_demo/lcqmc.train.data'
-    ds_train, ds_val = get_data_set_basic(data_path,
-                                          max_len=sequence_len,
-                                          batch_size=8,
-                                          # with_label=False,
-                                          val_percent=0.2)
+    val_percent = 0. if args.file_path_val else 0.2
+    ds = get_data_set_basic(args.file_path_train,
+                            n_class=args.n_class,
+                            max_len=args.sequence_len,
+                            batch_size=args.batch_size,
+                            with_label=args.with_label,
+                            with_txt2=args.with_txt2,
+                            label_mode=args.label_mode,
+                            val_percent=val_percent)
+
+    if args.file_path_val:
+        ds_train = ds
+        ds_val = get_data_set_basic(args.file_path_val,
+                                    n_class=args.n_class,
+                                    max_len=args.sequence_len,
+                                    batch_size=args.batch_size,
+                                    with_label=args.with_label,
+                                    with_txt2=args.with_txt2,
+                                    label_mode=args.label_mode)
+    else:
+        ds_train, ds_val = ds
 
     # 训练
-    for x, y in ds_train.take(1):
-        print(K.shape(x))
-        print(K.shape(y))
-        # print(it)
-    model.fit(ds_train, epochs=n_epoch, validation_data=ds_val, verbose=1)
+    model.fit(ds_train, epochs=args.n_epoch, validation_data=ds_val, verbose=1)
+
+    # 保存模型
+    if args.save_path:
+        model.save(args.save_path)
+
+
+def get_args():
+    """"""
+    p = argparse.ArgumentParser(description='')
+
+    p.add_argument(
+        '--ckpt_path',  #
+        type=str,
+        default=r'../model_ckpt/chinese_wwm_ext_L-12_H-768_A-12',
+        help='预训练模型',
+    )
+
+    p.add_argument(
+        '--file_path_train',  #
+        default=r'../data_set/test_data.txt',
+        type=str,
+        help='训练集路径',
+    )
+
+    p.add_argument(
+        '--file_path_val',  #
+        type=str,
+        help='验证集路径',
+    )
+
+    p.add_argument(
+        '--save_path',  #
+        type=str,
+        help='模型保存路径',
+    )
+
+    p.add_argument(
+        '--batch_size',  #
+        default=8,
+        type=int,
+    )
+
+    p.add_argument(
+        '--sequence_len',  #
+        default=128,
+        type=int,
+    )
+
+    p.add_argument(
+        '--n_epoch',  #
+        default=5,
+        type=int,
+    )
+
+    p.add_argument(
+        '--n_class',  #
+        default=2,
+        type=int,
+    )
+
+    p.add_argument(
+        '--with_label',  #
+        action='store_false',
+    )
+
+    p.add_argument(
+        '--with_txt2',  #
+        action='store_true',
+    )
+
+    p.add_argument(
+        '--label_mode',  #
+        default='one_hot',
+        type=str,
+    )
+
+    return p.parse_args()
 
 
 if __name__ == '__main__':
     """"""
-    main()
+    args = get_args()
+    main(args)
