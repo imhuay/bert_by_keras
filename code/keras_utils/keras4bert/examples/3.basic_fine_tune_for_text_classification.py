@@ -19,7 +19,7 @@ except:
     import keras.backend as K
 
 from bert_keras.model.bert import build_bret, model_fine_tune_config
-from bert_keras.utils.data_process import gen_data_set_basic
+from bert_keras.utils.data_process import get_data_set_basic
 
 
 def build_model(config_path, checkpoint_path, sequence_len, n_class):
@@ -73,7 +73,7 @@ def main():
 
     # 数据准备
     data_path = r'../data_set/lcqmc_demo/lcqmc.train.data'
-    ds_train, ds_val = gen_data_set_basic(data_path,
+    ds_train, ds_val = get_data_set_basic(data_path,
                                           max_len=sequence_len,
                                           batch_size=8,
                                           # with_label=False,

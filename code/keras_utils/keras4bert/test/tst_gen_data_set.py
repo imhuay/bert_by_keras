@@ -11,13 +11,13 @@ Subject:
     
 """
 
-from bert_keras.utils.data_process import gen_data_set_basic
+from bert_keras.utils.data_process import get_data_set_basic
 import keras.backend as K
 
 
 if __name__ == '__main__':
     """"""
-    ds, ds_val = gen_data_set_basic(r'../data_set/lcqmc_demo/lcqmc.train.data',
+    ds, ds_val = get_data_set_basic(r'../data_set/lcqmc_demo/lcqmc.train.data',
                                     with_label=True,
                                     with_txt2=True,
                                     is_shuffle=True,
