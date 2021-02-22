@@ -25,7 +25,7 @@ def get_data_set_basic(data_path,
                        with_label=True,
                        with_txt2=False,
                        batch_size=32,
-                       val_percent=0.,
+                       val_percent=None,
                        is_shuffle=True,
                        label_mode='one_hot',
                        n_class=None,
@@ -60,6 +60,8 @@ def get_data_set_basic(data_path,
     Returns:
 
     """
+    if val_percent is None:
+        val_percent = 0.
     assert 0. <= val_percent < 1., 'val_percent 须在 [0, 1) 范围内。'
     is_val = val_percent > 0.
 
@@ -92,10 +94,16 @@ def get_data_set_basic(data_path,
     label_st = set()
 
     n_row = _n_row_check()
+    assert_flag = True
     with open(data_path) as f:
-        for ln in f:
-            row = ln.strip().split(sep)
+        for ln, line in enumerate(f):
+            row = line.strip().split(sep)
+
             if n_row != len(row):
+                if assert_flag:
+                    print('\nAssert: expect n_row=%s but get %s!\n' % (n_row, len(row)))
+                    assert_flag = False
+
                 continue
 
             txt1_ls.append(row[0])
