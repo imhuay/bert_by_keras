@@ -9,6 +9,7 @@ out/
 -*
 
 # 指定文件
+git-push-abs_mt.sh
 # git_push.sh
 # git_pull.sh
 
