@@ -9,6 +9,9 @@ Author:
 
 Subject:
     如何 fine tune BERT 来进行文本分类任务
+
+运行环境:
+    - tensorflow==2.4
 """
 import os
 import argparse

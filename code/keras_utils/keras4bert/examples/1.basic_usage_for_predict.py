@@ -19,6 +19,10 @@ Notes:
     - 以下输出基于 tf2.4 版本
     - keras<2.4 或 tensorflow<2.4 的版本，tf.keras 和 keras 不能混用，之后的版本应该可以（未测试）
         - 比如 keras==2.3.1 下 Input 层的 output_shape 为 (None, sequence_len)，而 keras==2.4.3 中为 [(None, sequence_len)]
+    
+运行环境:
+    - tensorflow==2.4
+    - tensorflow==2.0 + keras==2.3.1
 """
 import numpy as np
 
