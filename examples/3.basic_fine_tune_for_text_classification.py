@@ -37,7 +37,7 @@ def build_model(config_path, checkpoint_path, sequence_len, n_class):
     x = bert.output  # 这里用 output，outputs 返回的是一个列表
     x = keras.layers.Dropout(0.1, name='Classification_Dropout')(x)  # 如果用 outputs，这里要传 x[0]
     # 增加 softmax 层
-    outputs = keras.layers.Dense(n_class, name='Classification_Softmax')(x)
+    outputs = keras.layers.Dense(n_class, activation='softmax', name='Classification_Softmax')(x)
 
     model = keras.Model(bert.inputs, outputs, name='Bert_Classification')
     return model, layer_name
