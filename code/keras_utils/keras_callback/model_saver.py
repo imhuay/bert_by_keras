@@ -52,7 +52,7 @@ class ModelSaver(keras.callbacks.Callback):
             save_path: 保存路径，默认为 './best_model'
             save_log_path: 模型保存日志的路径，日志为 json 格式，默认为 os.path.join(save_path, 'save_log.json')
             metric: 参考指标（训练集），keras 中验证集对应指标为 'val_%s' % metric
-            metric_delta: 验证集与验证集指标之间的最大差值，只有两者的差值在这个之间才会保存，防止保存过拟合的模型
+            metric_delta: 训练集与验证集之间的最大差值，只有两者的差值在这个之间才会保存，防止保存过拟合的模型
             metric_expect: 最小期望指标，只有验证集指标大于该值才会保存
             is_early_stop: 提前停止训练，停止条件：最优指标保持一定次数
             min_delta: 允许最优指标发生的波动
