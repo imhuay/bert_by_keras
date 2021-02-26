@@ -97,7 +97,10 @@ def get_data_set_basic(data_path,
     assert_flag = True
     with open(data_path) as f:
         for ln, line in enumerate(f):
-            row = line.strip().split(sep)
+            if '' == line.strip():
+                continue
+
+            row = line[:-1].split(sep)
 
             if n_row != len(row):
                 if assert_flag:
@@ -121,6 +124,9 @@ def get_data_set_basic(data_path,
             inp_token.append(tokens)
             inp_segment.append(segments)
             inp_label.append(label)
+
+    # 打印数据量
+    print('Data rows: %s, val_percent=%s' % (len(inp_token), val_percent))
 
     # shuffle 在划分验证集之前
     if is_shuffle:
