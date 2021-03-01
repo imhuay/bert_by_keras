@@ -58,7 +58,7 @@ git reset --mixed HEAD~1
 -- 撤回最近一次的commit（撤销commit，撤销git add）
 
 git reset --hard HEAD~1 
--- 撤回最近一次的commit（撤销commit，撤销git add,还原改动的代码）
+-- 撤回最近一次的commit（撤销commit，撤销git add，还原改动的代码）
 ```
 
 ### 删除已提交文件/文件夹
@@ -96,7 +96,8 @@ git checkout commit_id [file]
 - 如果是通过 ssh 与远程仓库交互，且是第一次在本机执行，则需要先生成 ssh key，然后将**公钥**添加到远程仓库中，以识别用户身份；
     ```shell
     # 生成 ssh key
-    ssh-keygen -t rsa -C "邮箱地址"  # 也可以直接执行 ssh-keygen
+    ssh-keygen -t rsa  # 不添加邮箱
+    # ssh-keygen -t rsa -C "邮箱地址"
     ```
 
 - ssh-keygen 会先确认密钥的存储位置（默认是 ~/.ssh/id_rsa）；
