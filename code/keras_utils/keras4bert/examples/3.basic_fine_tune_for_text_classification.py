@@ -11,10 +11,13 @@ Subject:
     如何 fine tune BERT 来进行文本分类任务
 
 运行环境:
+    - tensorflow==2.2
     - tensorflow==2.4
 """
 import os
 import argparse
+
+# import tensorflow_addons as tfa
 
 try:
     import tensorflow.keras as keras
@@ -25,6 +28,7 @@ except:
 
 from bert_keras.model.bert import build_bret, model_fine_tune_config
 from bert_keras.utils.data_process import get_data_set_basic
+from bert_keras.optimizer.weight_decay_optimizers import AdamW
 
 
 def build_model(config_path, checkpoint_path, sequence_len, n_class):
@@ -67,8 +71,11 @@ def main(args):
         if layer.trainable_weights:  # 使用 trainable 判断会把所有层都打印出来，不知道为什么
             print(layer.name)
 
+    # AdamW 无效，原因未知
+    # optimizer = AdamW(weight_decay=0.01, learning_rate=2e-5, epsilon=1e-6)
+    optimizer = keras.optimizers.Adam(2e-5)
     model.compile(loss='categorical_crossentropy',
-                  optimizer=keras.optimizers.Adam(2e-5),  # 使用足够小的学习率，建议 1e-5 ~ 5e-5
+                  optimizer=optimizer,  # 使用足够小的学习率，建议 1e-5 ~ 5e-5
                   metrics=['accuracy'])
 
     # 数据准备
