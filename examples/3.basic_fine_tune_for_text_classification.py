@@ -11,8 +11,8 @@ Subject:
     如何 fine tune BERT 来进行文本分类任务
 
 运行环境:
-    - tensorflow==2.2
     - tensorflow==2.4
+    - tensorflow==2.2
 """
 import os
 import argparse
@@ -71,7 +71,7 @@ def main(args):
         if layer.trainable_weights:  # 使用 trainable 判断会把所有层都打印出来，不知道为什么
             print(layer.name)
 
-    # AdamW 无效，原因未知
+    # AdamW 效果很差，可能原因：没有配合 lr 衰减
     # optimizer = AdamW(weight_decay=0.01, learning_rate=2e-5, epsilon=1e-6)
     optimizer = keras.optimizers.Adam(2e-5)
     model.compile(loss='categorical_crossentropy',
