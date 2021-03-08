@@ -13,8 +13,6 @@ Subject:
 import os
 import imghdr
 
-from PIL import Image
-
 
 def get_image_ext(image_path):
     """
@@ -57,21 +55,30 @@ def rename_to_real_ext(image_path):
     os.rename(image_path, dst)
 
 
-def is_image_complete(image_path):
+def is_image_complete(img):
     """判断图片是否完整"""
-    file_obj = open(image_path, 'rb')
-    is_valid = True
 
-    if 'jpeg' == imghdr.what(image_path):
-        if not file_obj.read().rstrip(b'\0\r\n').endswith(b'\xff\xd9'):
-            is_valid = False
+    def is_complete_jpg(byte_obj):
+        b = byte_obj.rstrip(b'\0\r\n')
+        return b.endswith(b'\xff\xd9')
+
+    def is_complete_png(byte_obj):
+        b = byte_obj.rstrip(b'\0\r\n')
+        return b.endswith(b'\x60\x82\x00') or b.endswith(b'\x60\x82')
+
+    if isinstance(img, str):
+        img = open(img, 'rb').read()
+
+    if 'jpeg' == imghdr.test_jpeg(img, img):
+        return is_complete_jpg(img)
+    elif 'png' == imghdr.test_png(img, img):
+        return is_complete_png(img)
     else:
         try:
-            Image.open(file_obj).verify()
+            from PIL import Image
+            Image.open(img).verify()
         except:
-            is_valid = False
-
-    return is_valid
+            return False
 
 
 if __name__ == '__main__':
@@ -82,6 +89,7 @@ if __name__ == '__main__':
         ext_real, is_same = get_image_ext(file_path)
         print('%s' % '\t'.join(str(it) for it in [file_name, ext_real, is_same]))
 
+    print()
     for file_name in os.listdir(dir_path):
         file_path = os.path.join(dir_path, file_name)
         is_valid = is_image_complete(file_path)
