@@ -12,7 +12,6 @@ Subject:
 """
 
 import os
-import imghdr
 
 
 def get_image_ext(image_path):
@@ -29,6 +28,8 @@ def get_image_ext(image_path):
         真实后缀，真实后缀与当前后缀是否相同
         如果当前文件不是图片，则 ext_real 为 None
     """
+    import imghdr
+
     # 获取当前后缀
     ext_cur = os.path.splitext(image_path)[1]
 
@@ -58,6 +59,7 @@ def rename_to_real_ext(image_path):
 
 def is_image_complete(img):
     """判断图片是否完整"""
+    import imghdr
 
     def is_complete_jpg(byte_obj):
         b = byte_obj.rstrip(b'\0\r\n')
