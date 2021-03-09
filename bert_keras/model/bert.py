@@ -87,12 +87,9 @@ class _LayerName:
 
 def build_bret(config_path=None,
                ckpt_path=None,
-               output_type='cls_embedding',
-               training=False,
-               return_full_model=False,
                return_config=False,
                return_layer_name=False,
-               **kwargs):
+               sequence_len=None):
     """"""
 
     def _arg_replace(arg_name, arg_name_new):
@@ -103,10 +100,6 @@ def build_bret(config_path=None,
     def _remove_arg(arg_name):
         config.pop(arg_name)
 
-    def _check_args():
-        assert output_type in _OutputType.get_type_set()
-
-    _check_args()
     config = {}
     if config_path is not None:
         config.update(json.load(open(config_path)))
@@ -129,10 +122,28 @@ def build_bret(config_path=None,
     _arg_replace('num_hidden_layers', 'n_transformer_block')
     _arg_replace('type_vocab_size', 'segment_vocab_size')
     _arg_replace('vocab_size', 'vocab_size')
-    config.update(kwargs)
+    # config.update(kwargs)
+    config['sequence_len'] = sequence_len
 
     model, layer_name = bert(**config, return_layer_name=True)
-    load_model_weights_from_checkpoint(model, config, ckpt_path, layer_name)
+    if ckpt_path:
+        load_model_weights_from_checkpoint(model, config, ckpt_path, layer_name)
+
+    ret = [model]
+    if return_config:
+        ret.append(config)
+
+    if return_layer_name:
+        ret.append(layer_name)
+
+    return model if len(ret) <= 1 else ret
+
+
+def bert_output_adjust(model,
+                       output_type='cls_embedding',
+                       training=False, ):
+    """"""
+    assert output_type in _OutputType.get_type_set()
 
     # outputs = [sequence_embedding, cls_embedding, mlm_probability, nsp_probability]
     outputs = model.outputs
@@ -149,17 +160,7 @@ def build_bret(config_path=None,
 
     model_fix = keras.Model(model.inputs, outputs=outputs, name='Bert_fix')
 
-    ret = [model_fix]
-    if return_full_model:
-        ret.append(model)
-
-    if return_config:
-        ret.append(config)
-
-    if return_layer_name:
-        ret.append(layer_name)
-
-    return model_fix if len(ret) <= 1 else ret
+    return model_fix
 
 
 def bert(n_hidden_unit=768,

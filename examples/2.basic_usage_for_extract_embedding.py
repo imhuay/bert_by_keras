@@ -15,7 +15,6 @@ References:
 
 运行环境:
     - tensorflow==2.4
-    - tensorflow==2.0 + keras==2.3.1
 """
 import numpy as np
 
@@ -26,7 +25,7 @@ except:
     import keras
     import keras.backend as K
 
-from bert_keras.model.bert import build_bret
+from bert_keras.model.bert import build_bret, bert_output_adjust
 from bert_keras.utils.tokenizer import Tokenizer
 from bert_keras.utils import to_array
 
@@ -38,12 +37,12 @@ sequence_len = 100
 assert sequence_len <= 512
 
 # 加载模型：这里 model 为完整模型，包含多个输出；model_fix 为根据 return_type 裁剪输出后的模型
-model_fix, model = build_bret(config_path, checkpoint_path,
-                              sequence_len=sequence_len,
-                              output_type='sentence_embedding',  # 输出为 sentence embedding
-                              return_full_model=True,  # 返回完整模型，用于第二个例子中重构输出
-                              return_config=False)
+model = build_bret(config_path, checkpoint_path,
+                   sequence_len=sequence_len,
+                   return_config=False)
 model.summary(line_length=200)
+
+model_fix = bert_output_adjust(model, output_type='sentence_embedding')
 
 print('\n===== 1. Example of extract sentence embedding =====')
 tokenizer = Tokenizer(dict_path)  # 建立分词器
@@ -104,7 +103,7 @@ ret_part_except = np.array(
 )
 print('部分截断结果：')
 print(ret_part)
-assert np.allclose(ret_part, ret_part_except, atol=0.003), '实际结果与期望值不符'
+assert np.allclose(ret_part, ret_part_except, atol=0.005), '实际结果与期望值不符'
 """
 outputs shape: (2, 768)
 部分截断结果：

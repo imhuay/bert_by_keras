@@ -16,13 +16,17 @@ References:
 
 Notes:
     - 不同版本的 tf 版本输出可能会略有区别
-    - 以下输出基于 tf2.4 版本
     - keras<2.4 或 tensorflow<2.4 的版本，tf.keras 和 keras 不能混用，之后的版本应该可以（未测试）
         - 比如 keras==2.3.1 下 Input 层的 output_shape 为 (None, sequence_len)，而 keras==2.4.3 中为 [(None, sequence_len)]
     
 运行环境:
-    - tensorflow==2.4
     - tensorflow==2.0 + keras==2.3.1
+
+遇到的坑：
+    模型的保存和加载：
+        - `model.save` 和 `keras.models.load_model` 不稳定；
+            - tensorflow==2.0 + keras==2.3.1 可以复现，但 tensorflow == 2.4 加载时出现问题；
+        - 如果需要继续训练，建议使用 model.save_weights 和 model.load_weights；
 """
 import numpy as np
 
@@ -33,7 +37,7 @@ except:
     import keras
     import keras.backend as K
 
-from bert_keras.model.bert import build_bret
+from bert_keras.model.bert import build_bret, bert_output_adjust
 from bert_keras.utils.tokenizer import Tokenizer
 from bert_keras.utils import to_array
 
@@ -45,12 +49,13 @@ sequence_len = 100
 assert sequence_len <= 512
 
 # 加载模型：这里 model 为完整模型，包含多个输出；model_fix 为根据 return_type 裁剪输出后的模型
-model_fix, model = build_bret(config_path, checkpoint_path,
-                              sequence_len=sequence_len,
-                              output_type='mlm_probability',  # 输出为 mask 字的概率
-                              return_full_model=True,  # 返回完整模型，用于第二个例子中重构输出
-                              return_config=False)
+model = build_bret(config_path, checkpoint_path,
+                   sequence_len=sequence_len,
+                   return_config=False)
 model.summary(line_length=200)
+
+# 调整模型的输出
+model_fix = bert_output_adjust(model, output_type='mlm_probability')  # 输出为 mask 字的概率
 
 # 建立分词器
 tokenizer = Tokenizer(dict_path)
@@ -122,3 +127,26 @@ for i, it in enumerate(ret):
 第1组是下一句的概率为：0.99991
 第2组是下一句的概率为：0.00109
 """
+
+print('\n===== 3. 保存并加载模型 =====')
+print('\n保存模型权重')
+save_path = 'save_model/bert.model'
+model_fix.save_weights(save_path)
+
+print('\n重新创建一个模型，但不加载原始权重')
+model = build_bret(config_path,
+                   sequence_len=sequence_len,
+                   return_config=False)
+model_load = keras.Model(model.inputs, model.outputs[3], name='Bert-nsp')
+model_load.load_weights(save_path)
+# model_load = keras.models.load_model('save_model/bert.model')
+ret = model_load.predict(inputs)
+
+print('\n--- Predicting ---')
+print('输出 shape:', K.int_shape(ret))
+# print(ret.tolist())
+# 期望结果
+ret_except = np.array([[0.9999082088470459, 9.180504275718704e-05], [0.0010862667113542557, 0.9989137649536133]])
+assert np.allclose(ret, ret_except, atol=0.001), '实际结果与期望值不符'
+for i, it in enumerate(ret):
+    print('第%s组是下一句的概率为：%.5f' % (i + 1, it[0]))
