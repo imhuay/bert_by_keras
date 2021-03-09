@@ -100,7 +100,7 @@ def get_data_set_basic(data_path,
             if '' == line.strip():
                 continue
 
-            row = line[:-1].split(sep)
+            row = line.rstrip().split(sep)
 
             if n_row != len(row):
                 if assert_flag:
