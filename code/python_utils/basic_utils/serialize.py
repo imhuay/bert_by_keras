@@ -8,7 +8,7 @@ Author:
     huayang
     
 Subject:
-    文件的序列化与反序列化
+    任意对象的序列化与反序列化
 """
 import base64
 
