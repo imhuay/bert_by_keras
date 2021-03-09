@@ -57,33 +57,6 @@ def rename_to_real_ext(image_path):
     os.rename(image_path, dst)
 
 
-def is_image_complete(img):
-    """判断图片是否完整"""
-    import imghdr
-
-    def is_complete_jpg(byte_obj):
-        b = byte_obj.rstrip(b'\0\r\n')
-        return b.endswith(b'\xff\xd9')
-
-    def is_complete_png(byte_obj):
-        b = byte_obj.rstrip(b'\0\r\n')
-        return b.endswith(b'\x60\x82\x00') or b.endswith(b'\x60\x82')
-
-    if isinstance(img, str):
-        img = open(img, 'rb').read()
-
-    if 'jpeg' == imghdr.test_jpeg(img, img):
-        return is_complete_jpg(img)
-    elif 'png' == imghdr.test_png(img, img):
-        return is_complete_png(img)
-    else:
-        try:
-            from PIL import Image
-            Image.open(img).verify()
-        except:
-            return False
-
-
 if __name__ == '__main__':
     """"""
     dir_path = '../data'
@@ -91,11 +64,5 @@ if __name__ == '__main__':
         file_path = os.path.join(dir_path, file_name)
         ext_real, is_same = get_image_ext(file_path)
         print('%s' % '\t'.join(str(it) for it in [file_name, ext_real, is_same]))
-
-    print()
-    for file_name in os.listdir(dir_path):
-        file_path = os.path.join(dir_path, file_name)
-        is_valid = is_image_complete(file_path)
-        print('%s' % '\t'.join(str(it) for it in [file_name, is_valid]))
 
     # rename_to_real_ext(os.path.join(dir_path, 'pok_test.png'))

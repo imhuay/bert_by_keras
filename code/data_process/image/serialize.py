@@ -19,10 +19,9 @@ Note:
 References:
     keras.preprocessing.image
 """
-from io import BytesIO
+import io
 
 import numpy as np
-import tensorflow as tf
 from PIL import Image
 
 
@@ -41,10 +40,10 @@ def load_image(image, color_mode='RGB'):
         raise ValueError('Unsupported color_mode: %s, it must be one of {"L", "RGB", "RGBA"}' % color_mode)
 
     if isinstance(image, bytes):
-        img = Image.open(BytesIO(image))
+        img = Image.open(io.BytesIO(image))
     else:
         with open(image, 'rb') as f:
-            img = Image.open(BytesIO(f.read()))
+            img = Image.open(io.BytesIO(f.read()))
 
     if img.mode != color_mode:
         img = img.convert(color_mode)
