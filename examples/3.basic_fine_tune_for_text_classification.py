@@ -92,8 +92,9 @@ def fine_tune(args):
     model, layer_name = build_model(args)
 
     # 加载已经训练的权重
-    print('\n--- 加载模型权重 ---\n')
-    model.load_weights(args.save_path)
+    if args.save_path:
+        print('\n--- 加载模型权重 ---\n')
+        model.load_weights(args.save_path)
 
     ds_train, ds_val = get_ds(args)
 
