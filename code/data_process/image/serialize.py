@@ -109,7 +109,7 @@ def tensor_to_image(x, scale=True, dtype='float32'):
 
 if __name__ == '__main__':
     """"""
-    obj = open('../../_test_data/pok.jpg', 'rb').read()
+    obj = open('../_test_data/pok.jpg', 'rb').read()
     img = load_image(obj, color_mode='RGB')
     print(isinstance(img, Image.Image))
 

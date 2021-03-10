@@ -73,7 +73,7 @@ def is_complete(img):
 
 if __name__ == '__main__':
     """"""
-    dir_path = '../../_test_data'
+    dir_path = '../_test_data'
     for file_name in os.listdir(dir_path):
         file_path = os.path.join(dir_path, file_name)
 

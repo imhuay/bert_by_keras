@@ -59,9 +59,11 @@ def rename_to_real_ext(image_path):
 
 if __name__ == '__main__':
     """"""
-    dir_path = '../data'
+    dir_path = '../_test_data/'
     for file_name in os.listdir(dir_path):
         file_path = os.path.join(dir_path, file_name)
+        if os.path.isdir(file_path):
+            continue
         ext_real, is_same = get_image_ext(file_path)
         print('%s' % '\t'.join(str(it) for it in [file_name, ext_real, is_same]))
 
