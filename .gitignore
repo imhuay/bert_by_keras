@@ -1,17 +1,11 @@
 # 文件夹
 .idea/
-out/
+model_ckpt/*/*
 
-# 临时文件
+# 文件
 *.iml
 *.DS_Store
 *.pyc
--*
-
-# 指定文件
-git-push-abs_mt.sh
-# git_push.sh
-# git_pull.sh
 
 # 排除文件
 !placeholder
