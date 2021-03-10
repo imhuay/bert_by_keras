@@ -229,20 +229,17 @@ git checkout commit_id [file]
     > git remote set-url <new_name_a> <new_url_a>
     ```
 
-2. 删除当前子仓库A文件夹（其中包含子仓库B），并 commit
+2. 重命名当前子仓库A文件夹，并 commit
 
 3. 重新 add 子仓库A（自动 commit）
 
     ```
     > git subtree add --prefix=<new_prefix> <new_name_a> master --squash
     ```
+    
+4. 删除自动 pull 的子仓库A，并将本地重命名后的子仓库A改回原名，然后 commit 并 `git subtree push`（这个操作是防止有一些本地文件并没有提交到远程仓库，避免这些文件被删除）
 
-4. 删除子仓库A下的子仓库B，并 commit，否则父仓库不能关联子仓库B（提示prefix已存在）
-
-5. 重新 add 子仓库B（因为前缀变了，所以 b 也要重新 add）
-    ```
-    > git subtree add --prefix=<new_prefix>/b <name_b> master --squash
-    ```
+5. 因为子仓库B的前缀变了，因此也需要重复上述操作，重新关联远程仓库
 
 6. 完成
 
