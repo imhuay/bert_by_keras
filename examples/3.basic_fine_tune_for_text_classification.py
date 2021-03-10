@@ -125,7 +125,7 @@ def get_args():
 
     p.add_argument('--save_path',  #
                    type=str,
-                   default='./model_file/saved_model',
+                   default='./_out/ckpt/model',
                    help='模型保存路径', )
 
     p.add_argument('--batch_size',  #
