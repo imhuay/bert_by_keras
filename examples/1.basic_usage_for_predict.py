@@ -41,9 +41,9 @@ from bert_keras.model.bert import build_bret, bert_output_adjust
 from bert_keras.utils.tokenizer import Tokenizer
 from bert_keras.utils import to_array
 
-config_path = '../model_ckpt/chinese_L-12_H-768_A-12/bert_config.json'
-checkpoint_path = '../model_ckpt/chinese_L-12_H-768_A-12/bert_model.ckpt'
-dict_path = '../model_ckpt/chinese_L-12_H-768_A-12/vocab.txt'
+config_path = '../model_file/chinese_L-12_H-768_A-12/bert_config.json'
+checkpoint_path = '../model_file/chinese_L-12_H-768_A-12/bert_model.ckpt'
+dict_path = '../model_file/chinese_L-12_H-768_A-12/vocab.txt'
 
 sequence_len = 100
 assert sequence_len <= 512

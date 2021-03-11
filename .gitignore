@@ -1,6 +1,6 @@
 # 文件夹
 .idea/
-model_ckpt/*/*
+model_file/*/*
 
 # 文件
 *.iml

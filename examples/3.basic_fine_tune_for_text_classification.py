@@ -111,7 +111,7 @@ def get_args():
 
     p.add_argument('--ckpt_path',  #
                    type=str,
-                   default=r'../model_ckpt/chinese_wwm_ext_L-12_H-768_A-12',
+                   default=r'../model_file/chinese_wwm_ext_L-12_H-768_A-12',
                    help='预训练模型', )
 
     p.add_argument('--file_path_train',  #
