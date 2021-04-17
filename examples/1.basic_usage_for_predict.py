@@ -130,7 +130,7 @@ for i, it in enumerate(ret):
 
 print('\n===== 3. 保存并加载模型 =====')
 print('\n保存模型权重')
-save_path = './_out/ckpt/model'
+save_path = '-out/ckpt/model'
 model_fix.save_weights(save_path)
 
 print('\n重新创建一个模型，并加载保存的权重')

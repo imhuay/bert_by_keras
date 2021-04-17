@@ -3,6 +3,7 @@
 model_file/*/*
 
 # 文件
+-*
 *.iml
 *.DS_Store
 *.pyc
