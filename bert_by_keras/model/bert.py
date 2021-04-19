@@ -26,8 +26,8 @@ except:
     import keras
     import keras.backend as K
 
-from bert_keras.layers import *
-from bert_keras.utils import gelu
+from bert_by_keras.layers import *
+from bert_by_keras.utils import gelu
 
 
 class _OutputType:

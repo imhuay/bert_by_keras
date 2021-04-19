@@ -26,8 +26,8 @@ except:
     import keras
     import keras.backend as K
 
-from bert_keras.model.bert import build_bret, bert_output_adjust, model_fine_tune_config
-from bert_keras.utils.data_process import get_data_set_basic
+from bert_by_keras.model.bert import build_bret, bert_output_adjust, model_fine_tune_config
+from bert_by_keras.utils.data_process import get_data_set_basic
 # from bert_keras.optimizer.weight_decay_optimizers import AdamW
 
 

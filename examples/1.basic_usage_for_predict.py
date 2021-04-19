@@ -37,9 +37,9 @@ except:
     import keras
     import keras.backend as K
 
-from bert_keras.model.bert import build_bret, bert_output_adjust
-from bert_keras.utils.tokenizer import Tokenizer
-from bert_keras.utils import to_array
+from bert_by_keras.model.bert import build_bret, bert_output_adjust
+from bert_by_keras.utils.tokenizer import Tokenizer
+from bert_by_keras.utils import to_array
 
 config_path = '../model_file/chinese_L-12_H-768_A-12/bert_config.json'
 checkpoint_path = '../model_file/chinese_L-12_H-768_A-12/bert_model.ckpt'
