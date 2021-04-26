@@ -412,9 +412,9 @@ def model_fine_tune_config(model: keras.Model,
                            is_fine_tune_embedding=False,
                            n_fine_tune_transformer_block=None):
     """
-    模型 fine tune 配置，如果有其他需求可以参考这个方法修改：
-        - 比如 output 部分一般都是要参与训练的，这个应该没疑问，就没写相关控制方法；
-        - 比如像控制特定哪几个 transformer 要参与训练
+    模型 fine tune 配置，如果有其他需求可以参考这个方法修改，如：
+        - 控制特定哪几个 transformer 参与训练；
+        - 只训练部分指定层；
         
     Args:
         model: 
