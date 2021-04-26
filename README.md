@@ -12,7 +12,6 @@ bert_by_keras
 - tensorflow==2.4（推荐）
 - tensorflow==2.0 + keras==2.3.1
 
-
 ### TODO
 - [ ] ALBERT
     - https://github.com/google-research/ALBERT
