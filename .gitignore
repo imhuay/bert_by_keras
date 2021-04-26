@@ -1,6 +1,7 @@
 # 文件夹
 .idea/
 model_file/*/*
+model_file/*.zip
 
 # 文件
 -*

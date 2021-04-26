@@ -5,3 +5,5 @@
 - bert-wwm | https://github.com/ymcui/Chinese-BERT-wwm
     - chinese_wwm_L-12_H-768_A-12: 中文维基
     - chinese_wwm_ext_L-12_H-768_A-12: EXT数据（中文维基百科，其他百科、新闻、问答等数据）
+    - chinese_roberta_wwm_ext_L-12_H-768_A-12: RoBERTa + EXT数据
+        > roberta 模型不支持 NSP 任务
