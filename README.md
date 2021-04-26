@@ -5,8 +5,8 @@ bert_by_keras
 ---
 - 使用 keras 重构的 bert，主要目的是学习 keras 的使用、以及加深理解 bert 模型的结构；
 - 参考了以下两个库，这两个库封装的比较深，因此重写了这个版本；
-	- [CyberZHG/keras-bert](https://github.com/CyberZHG/keras-bert)
-	- [bojone/bert4keras](https://github.com/bojone/bert4keras)
+    - [CyberZHG/keras-bert](https://github.com/CyberZHG/keras-bert)
+    - [bojone/bert4keras](https://github.com/bojone/bert4keras)
 
 ### 运行环境
 - tensorflow==2.4（推荐）
