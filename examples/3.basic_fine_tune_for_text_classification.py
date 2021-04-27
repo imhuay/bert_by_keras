@@ -28,7 +28,7 @@ except:
 
 from bert_by_keras.model.bert import build_bret, bert_output_adjust, model_fine_tune_config
 from bert_by_keras.utils.data_process import get_data_set_basic
-# from bert_keras.optimizer.weight_decay_optimizers import AdamW
+from bert_by_keras.optimizer.adamw import AdamW
 
 
 def build_model(args):
@@ -50,7 +50,7 @@ def build_model(args):
     model = keras.Model(bert.inputs, outputs, name='Bert_Classification')
 
     # AdamW 效果很差，可能原因：没有配合 lr 衰减
-    # optimizer = AdamW(weight_decay=0.01, learning_rate=2e-5, epsilon=1e-6)
+    # optimizer = AdamW(learning_rate=2e-5, weight_decay_rate=0.01)
     optimizer = keras.optimizers.Adam(2e-5)
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,  # 使用足够小的学习率，建议 1e-5 ~ 5e-5
