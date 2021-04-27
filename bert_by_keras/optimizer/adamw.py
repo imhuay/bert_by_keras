@@ -26,7 +26,6 @@ except:
     import keras
     import keras.backend as K
 
-keras.optimizers.Adam._resource_scatter_add
 
 class AdamW(keras.optimizers.Optimizer):
     """"""
@@ -42,7 +41,6 @@ class AdamW(keras.optimizers.Optimizer):
                  **kwargs
                  ):
         """
-
         Args:
             learning_rate: 学习率
             weight_decay_rate: 权重衰减率
